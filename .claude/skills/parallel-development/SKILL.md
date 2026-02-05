@@ -89,123 +89,184 @@ Structure the work so coordination happens through the system, not conversation:
 **Test:** Does parallel work require active coordination?
 </core_principles>
 
+<two_phase_workflow>
+## Two-Phase Workflow
+
+Parallel development is split into two distinct phases:
+
+### Phase 1: `/plan` — Strategic Planning
+
+```
+/plan
+```
+
+Handles the **thinking** part:
+- Enters plan mode for safe exploration
+- Evaluates codebase and existing patterns
+- Clarifies requirements via `AskUserQuestion`
+- Generates detailed feature specs (JTBD, design, UX, architecture)
+- Updates PRD with completion markers (✅ 🔄 📋 ⏸️)
+- Outputs `.parallel-plan.md` with slice definitions and skill recommendations
+
+### Phase 2: `/execute` — Mechanical Execution
+
+```
+/execute
+```
+
+Handles the **doing** part:
+- Reads `.parallel-plan.md`
+- Creates git worktrees for each slice
+- Writes rich `.claude-task.md` files with full specs
+- Spawns background agents with `--dangerously-skip-permissions`
+- Monitors for `COMPLETE:` commits
+
+### Complete Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                           /plan                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  1. Enter plan mode (safe exploration)                               │
+│  2. Analyze PRD and codebase                                         │
+│  3. Clarify requirements with user                                   │
+│  4. Generate feature specs (JTBD, design, UX, architecture)          │
+│  5. Update PRD with completion markers                               │
+│  6. Write .parallel-plan.md with slices + skill recommendations      │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                           /execute                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│  1. Read .parallel-plan.md                                           │
+│  2. Create worktrees for each slice                                  │
+│  3. Write .claude-task.md with full specs                            │
+│  4. Spawn agents (--dangerously-skip-permissions)                    │
+│  5. Monitor for COMPLETE: commits                                    │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+         ┌──────────────────────┼──────────────────────┐
+         ▼                      ▼                      ▼
+    ┌─────────┐          ┌─────────┐          ┌─────────┐
+    │ Agent 1 │          │ Agent 2 │          │ Agent 3 │
+    │ Slice A │          │ Slice B │          │ Slice C │
+    └─────────┘          └─────────┘          └─────────┘
+         │                      │                      │
+         └──────── All commit "COMPLETE:" ────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        /execute merge                                 │
+├─────────────────────────────────────────────────────────────────────┤
+│  1. Verify all COMPLETE: commits                                     │
+│  2. Merge branches to main                                           │
+│  3. Update PRD (🔄 → ✅)                                              │
+│  4. Clean up worktrees and branches                                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Why Two Phases?
+
+| Aspect | Single Command | Two-Phase |
+|--------|---------------|-----------|
+| Iteration | Hard to adjust mid-spawn | Plan phase allows iteration |
+| PRD sync | Manual | Automatic status updates |
+| Clarity | Prompt generated on-the-fly | Plan file is reviewable |
+| Resume | Start over if interrupted | Execute from existing plan |
+| Audit trail | None | PRD history + plan files |
+</two_phase_workflow>
+
 <automated_spawning>
 ## Automated Agent Spawning
 
-The most powerful pattern: create worktrees, generate task prompts, and open terminal windows where Claude instances work in parallel with full interactive permissions.
+Background agents with `--dangerously-skip-permissions` work autonomously in isolated worktrees. PR review is the safety net.
 
-### How It Works
+### Why This Works Safely
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                    Orchestrator Claude Instance                    │
-├──────────────────────────────────────────────────────────────────┤
-│  1. Create worktrees for each task                                │
-│  2. Write .claude-task.md prompt file in each worktree            │
-│  3. Open Terminal tabs via osascript                              │
-│  4. Each tab runs: claude "$(cat .claude-task.md)"                │
-│  5. User approves permissions across terminals                    │
-│  6. Merge all when complete                                       │
-└──────────────────────────────────────────────────────────────────┘
-         │                    │                    │
-         ▼                    ▼                    ▼
-    ┌─────────┐          ┌─────────┐          ┌─────────┐
-    │ Term 1  │          │ Term 2  │          │ Term 3  │
-    │ Claude  │          │ Claude  │          │ Claude  │
-    │ Task A  │          │ Task B  │          │ Task C  │
-    └─────────┘          └─────────┘          └─────────┘
-         │                    │                    │
-         └──────── All commit "COMPLETE:" ────────┘
-                              │
-                              ▼
-                       ┌─────────────┐
-                       │ Merge All   │
-                       │ Clean Up    │
-                       └─────────────┘
-```
+- **Worktree isolation** — each agent can only affect its own feature branch, never main
+- **PR review is the safety net** — nothing hits main without human review
+- **Worst case is a bad branch** — delete it and re-run that slice
+- **No credential exposure** — agents work within the repo boundary
 
-### Why Terminal Tabs (Not Background Agents)
+### Rich Task Prompts (.claude-task.md)
 
-Background Task agents cannot get user permission prompts — Bash and Write tools are auto-denied. Interactive terminal sessions solve this: each Claude instance can request and receive permission approvals from the user.
-
-### Usage
-
-```
-/parallel spawn --tasks="task-1,task-2,task-3"
-```
-
-This will:
-1. Create 3 worktrees with feature branches
-2. Write `.claude-task.md` prompt files in each worktree
-3. Open 3 Terminal windows via `osascript`
-4. Each terminal runs `claude "$(cat .claude-task.md)"`
-5. User approves permissions as agents work
-6. Agents commit with "COMPLETE:" prefix when done
-7. Return to orchestrator and run `/parallel merge-all`
-
-### Task Prompt File (.claude-task.md)
-
-Each worktree gets a `.claude-task.md` file containing the full task specification:
+Each worktree gets a `.claude-task.md` file with full specifications from the plan:
 
 ```markdown
-# Task: [Task Name]
+# Task: [Slice Name]
 
 You are working in worktree: [path]
 Branch: [branch-name]
 
-## Your Task
-[Specific task description from plan]
+## Recommended Skills
+- `frontend-design` — For distinctive visual design
+- `atomic-design-system` — Component hierarchy patterns
 
-## Steps
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
+## Jobs to be Done
+| Job Type | Description |
+|----------|-------------|
+| **Functional** | [What user needs to accomplish] |
+| **Emotional** | [How user wants to feel] |
+| **Success** | [Measurable outcome] |
 
-## Constraints
-- Only modify files in your assigned scope
-- Do NOT modify: [list of frozen files]
-- Commit when done with message starting with "COMPLETE:"
+## Design Spec
+**Layout**: [Description]
+**Component Hierarchy**: [Tree structure]
+**State Variations**: Loading, Empty, Error, Success
 
-Begin working now.
+## UX Architecture
+**User Flow**: [Step-by-step]
+**Interactions**: [Click, hover, drag behaviors]
+
+## Technical Architecture
+**File Structure**: [Directory layout]
+**State Management**: [Approach]
+**Data Flow**: [Source → Transform → Render]
+
+## Files You Own
+- [List of files/directories]
+
+## Frozen Files (DO NOT MODIFY)
+- [List of shared files]
+
+## Success Criteria
+- [ ] [Criterion 1]
+- [ ] [Criterion 2]
+- Commit: "COMPLETE: [description]"
+
+Begin working now. Read the recommended skills first.
 ```
 
-### Opening Terminal Tabs (macOS)
+### Spawning
 
 ```bash
-# For each worktree, open a Terminal window with Claude
-osascript -e '
-tell application "Terminal"
-    activate
-    do script "cd [worktree-path] && claude \"$(cat .claude-task.md)\""
-end tell'
+cd [worktree-path] && claude --dangerously-skip-permissions -p "$(cat .claude-task.md)" &
 ```
 
 ### Completion Detection
 
-Agents signal completion by:
-1. Making a commit with message starting with "COMPLETE:"
-2. The orchestrator checks via: `cd [worktree] && git log -1 --oneline | grep "^COMPLETE:"`
+Agents signal completion by committing with message starting with "COMPLETE:".
+Check via: `git log -1 --oneline | grep "COMPLETE:"`
 
 ### Why This Scales
 
-- **Full permissions** — Each terminal is interactive, user can approve tools
-- **True parallelism** — All Claude instances work simultaneously
-- **Automatic coordination** — Task prompts define boundaries
-- **Easy monitoring** — User sees all terminals, can check any at a glance
-- **Clean merge** — All branches merge in sequence when done
-- **No juggling** — Orchestrator creates everything, user just approves
+- **No bottlenecks** — no permission approvals to slow agents down
+- **True parallelism** — all agents work simultaneously
+- **Rich context** — JTBD, design, UX specs reduce ambiguity
+- **Safe** — worktree isolation + PR review = bad branch is worst case
+- **Skill guidance** — agents know which patterns to follow
 </automated_spawning>
 
 <intake>
 ## What parallel development task do you need?
 
-1. **Spawn parallel agents** — Create worktrees AND spawn background agents automatically (recommended)
-2. **Setup worktrees only** — Create parallel worktrees (manual terminal launch)
-3. **Slice work** — Analyze a project and suggest vertical slicing for parallel development
-4. **Check status** — View status of all worktrees and running agents
+1. **Plan parallel work** — Analyze codebase, clarify requirements, generate feature specs, create slice plan
+2. **Execute plan** — Create worktrees and spawn background agents from `.parallel-plan.md`
+3. **Check status** — View status of all worktrees and running agents
+4. **Merge completed work** — Merge all completed branches, update PRD, cleanup
 5. **Sync worktree** — Fetch latest changes, rebase, and run tests
-6. **Merge all** — Merge all completed feature branches to main
-7. **Coordinate work** — Get guidance on multi-agent coordination patterns
+6. **Learn patterns** — Get guidance on vertical slicing and coordination patterns
 
 **Wait for response before proceeding.**
 </intake>
@@ -213,13 +274,12 @@ Agents signal completion by:
 <routing>
 | Response | Action |
 |----------|--------|
-| 1, "spawn", "auto", "background" | Run `/parallel spawn` — Creates worktrees and spawns background Task agents |
-| 2, "setup", "create", "worktree" | Read [git-worktree-patterns.md](./references/git-worktree-patterns.md), run `/parallel setup` |
-| 3, "slice", "split", "divide" | Read [vertical-slicing.md](./references/vertical-slicing.md), run `/slice` |
-| 4, "status", "check", "progress" | Run `/parallel status` — Shows worktrees and background agent progress |
-| 5, "sync", "rebase", "update" | Read [merge-strategies.md](./references/merge-strategies.md), run `/parallel sync` |
-| 6, "merge", "integrate", "complete" | Run `/parallel merge-all` — Merges all completed branches |
-| 7, "coordinate", "multi-agent", "parallel" | Read [coordination-patterns.md](./references/coordination-patterns.md) |
+| 1, "plan", "start", "new" | Run `/plan` — Strategic planning with detailed feature specs |
+| 2, "execute", "spawn", "run" | Run `/execute` — Creates worktrees and spawns agents |
+| 3, "status", "check", "progress" | Run `/execute status` — Shows worktree and agent progress |
+| 4, "merge", "done", "complete" | Run `/execute merge` — Merges all completed branches |
+| 5, "sync", "rebase", "update" | Run `/execute sync` — Syncs worktree with main |
+| 6, "learn", "patterns", "help" | Read references: [vertical-slicing.md](./references/vertical-slicing.md), [coordination-patterns.md](./references/coordination-patterns.md) |
 
 **After reading references, apply patterns to the user's specific context.**
 </routing>
@@ -227,172 +287,213 @@ Agents signal completion by:
 <parallel_agents>
 ## Agent Orchestration
 
-### Setup Phase (Sequential)
+### Phase 1: Planning (`/plan`)
 ```
 ┌─────────────────────────┐
-│ vertical-slicer         │
-│ → Analyzes codebase     │
-│ → Suggests work splits  │
+│ Enter Plan Mode         │
+│ → Safe exploration      │
+│ → No side effects       │
 └───────────┬─────────────┘
             │
             ▼
 ┌─────────────────────────┐
-│ worktree-coordinator    │
-│ → Creates worktrees     │
-│ → Sets up branches      │
+│ Discovery (parallel)    │
+│ → Analyze PRD           │
+│ → Analyze codebase      │
+│ → Identify patterns     │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ Clarification           │
+│ → AskUserQuestion       │
+│ → Resolve JTBD          │
+│ → Scope decisions       │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ Feature Specs           │
+│ → JTBD per feature      │
+│ → Design specs          │
+│ → UX architecture       │
+│ → Technical arch        │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ Output                  │
+│ → Update PRD (markers)  │
+│ → .parallel-plan.md     │
 └─────────────────────────┘
 ```
 
-### Work Phase (Parallel)
-```
-┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐
-│ Worktree 1              │  │ Worktree 2              │  │ Worktree 3              │
-│ → Claude Instance A     │  │ → Claude Instance B     │  │ → Claude Instance C     │
-│ → Feature slice 1       │  │ → Feature slice 2       │  │ → Feature slice 3       │
-└───────────┬─────────────┘  └───────────┬─────────────┘  └───────────┬─────────────┘
-            │                            │                            │
-            └────────────┬───────────────┴───────────────┬────────────┘
-                         │                               │
-                         ▼                               ▼
-            ┌─────────────────────────┐    ┌─────────────────────────┐
-            │ Daily sync              │    │ Incremental merge       │
-            │ /parallel sync          │    │ /parallel merge         │
-            └─────────────────────────┘    └─────────────────────────┘
-```
-
-### Merge Phase (Sequential)
+### Phase 2: Execution (`/execute`)
 ```
 ┌─────────────────────────┐
-│ worktree-coordinator    │
-│ → Merge feature → main  │
-│ → Run integration tests │
-│ → Clean up worktree     │
-└─────────────────────────┘
+│ Read .parallel-plan.md  │
+│ → Validate slices       │
+│ → Create worktrees      │
+│ → Write task prompts    │
+└───────────┬─────────────┘
+            │
+            ▼
+┌───────────┴───────────┬─────────────────────┐
+▼                       ▼                     ▼
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│ Agent 1     │  │ Agent 2     │  │ Agent 3     │
+│ Slice A     │  │ Slice B     │  │ Slice C     │
+│ (background)│  │ (background)│  │ (background)│
+└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+       │                │                │
+       └── COMPLETE: ───┴── COMPLETE: ───┘
+                        │
+                        ▼
+            ┌─────────────────────────┐
+            │ /execute merge          │
+            │ → Merge to main         │
+            │ → Update PRD (✅)       │
+            │ → Cleanup worktrees     │
+            └─────────────────────────┘
 ```
 </parallel_agents>
 
 <setup_workflow>
-## Worktree Setup Workflow
+## Setup Workflow
 
-### Step 1: Analyze Project
+Use the two-phase workflow for all parallel development:
 
-Launch vertical-slicer agent:
-```
-subagent_type: feature-dev:code-explorer
-prompt: "Analyze the codebase structure to identify:
-1. Major feature areas (directories, modules)
-2. Shared code/utilities that shouldn't be touched in parallel
-3. Integration points (APIs, shared state, config)
-4. Current file organization patterns
+### Quick Start
 
-Return: Recommended vertical slices for parallel development"
-```
-
-### Step 2: Plan Worktrees
-
-Based on analysis, plan N worktrees (typically 2-4):
-
-```markdown
-## Proposed Worktrees
-
-| Worktree | Branch | Focus Area | Files |
-|----------|--------|------------|-------|
-| ../project-auth | feature-auth | Authentication | src/auth/*, api/auth/* |
-| ../project-billing | feature-billing | Billing | src/billing/*, api/billing/* |
-| ../project-ui | feature-ui | UI polish | src/components/*, styles/* |
-```
-
-### Step 3: User Confirmation
-
-Use AskUserQuestion:
-```
-"Here's the proposed parallel development setup:
-
-Worktree 1: ../project-auth (feature-auth)
-- User authentication and authorization
-- Files: src/auth/*, api/auth/*
-
-Worktree 2: ../project-billing (feature-billing)
-- Billing and subscriptions
-- Files: src/billing/*, api/billing/*
-
-This creates 2 parallel workstreams with minimal file overlap.
-
-Options:
-- Proceed with this setup
-- Adjust the slicing
-- Add another worktree
-- Start fresh with different approach"
-```
-
-### Step 4: Create Worktrees
-
-Execute setup commands:
 ```bash
-# Ensure main is up to date
-git checkout main && git pull
+# Phase 1: Plan
+/plan
+# → Enters plan mode
+# → Analyzes codebase and PRD
+# → Clarifies requirements
+# → Generates feature specs
+# → Outputs .parallel-plan.md
 
-# Create worktrees with dedicated branches
-git worktree add ../project-auth -b feature-auth
-git worktree add ../project-billing -b feature-billing
+# Phase 2: Execute
+/execute
+# → Reads .parallel-plan.md
+# → Creates worktrees
+# → Spawns agents
+# → Monitors for COMPLETE:
 
-# Verify setup
-git worktree list
+# Check progress
+/execute status
+
+# When all complete
+/execute merge
 ```
 
-### Step 5: Document Setup
+### What `/plan` Produces
 
-Create `.parallel-dev.md` in main:
+**.parallel-plan.md** with detailed slice definitions:
+
 ```markdown
-# Parallel Development Setup
+# Parallel Development Plan
 
-## Active Worktrees
+**Generated**: 2026-02-04
+**Session Focus**: Canvas Foundation
 
-| Worktree | Branch | Owner | Status |
-|----------|--------|-------|--------|
-| ../project-auth | feature-auth | Claude-1 | Active |
-| ../project-billing | feature-billing | Claude-2 | Active |
+## Slices
 
-## Coordination Rules
+### Slice 1: Canvas Graph Core
 
-1. Each worktree owns its file slice
-2. Merge to main daily
-3. Rebase from main after merges
-4. Resolve conflicts in feature branch, not main
+**Branch**: feature-canvas-core
 
-## Shared Files (DO NOT MODIFY)
+**Recommended Skills**:
+- `frontend-design` — Distinctive visual design
+- `atomic-design-system` — Component hierarchy
 
-- package.json (coordinate version bumps)
-- tsconfig.json
-- .env.example
+#### Jobs to be Done
+| Job Type | Description |
+|----------|-------------|
+| **Functional** | User needs to see component dependencies |
+| **Success** | Identify load-bearing components in <10s |
+
+#### Design Spec
+**Layout**: Full-viewport graph canvas
+**Component Hierarchy**:
+ComponentGraphPanel (organism)
+├── GraphCanvas (molecule)
+│   ├── GraphNode (atom)
+│   └── GraphEdge (atom)
+└── GraphControls (molecule)
+
+**State Variations**: Loading, Empty, Error, Success
+
+#### UX Architecture
+**User Flow**:
+1. Open Canvas tab → Loading
+2. Graph renders → Zoom-to-fit
+3. Hover node → Tooltip
+4. Click node → Selection
+
+#### Technical Architecture
+**Files Owned**: src/components/ComponentGraph/
+**Frozen**: package.json, src/lib/workspace-ui/
+
+**Success Criteria**:
+- [ ] Graph renders with 10+ nodes
+- [ ] Zoom/pan works
+- Commit: "COMPLETE: Canvas graph core"
+
+---
+
+### Slice 2: Parsing Engine
+[Similar structure...]
+
+## Merge Order
+1. Slice 2 (no dependencies)
+2. Slice 1 (uses parsing types)
+```
+
+### PRD Completion Markers
+
+`/plan` updates the PRD with standardized markers:
+
+```markdown
+## Implementation Status
+
+### ✅ Complete
+| Feature | Commit | Date |
+|---------|--------|------|
+| Workspace Shell | abc123 | 2026-02-01 |
+
+### 🔄 In Progress
+| Feature | Branch | Notes |
+|---------|--------|-------|
+| Canvas Graph | feature-canvas | Running |
+
+### 📋 Next Up
+| Feature | Priority | Dependencies |
+|---------|----------|--------------|
+| Heatmap Overlay | P1 | Canvas Graph |
+
+### ⏸️ Deferred
+| Feature | Reason |
+|---------|--------|
+| Email Notifications | Not needed for v1 |
 ```
 </setup_workflow>
 
 <sync_workflow>
-## Daily Sync Workflow
+## Sync Workflow
 
-Run in each worktree to stay current:
+Run `/execute sync` in a worktree to stay current with main:
 
-### Step 1: Stash Local Changes
 ```bash
-git stash  # If uncommitted changes exist
+/execute sync
 ```
 
-### Step 2: Fetch and Rebase
-```bash
-git fetch origin
-git rebase origin/main
-```
-
-### Step 3: Run Tests
-```bash
-npm test  # or your test command
-```
-
-### Step 4: Restore and Continue
-```bash
-git stash pop  # If stashed earlier
-```
+This will:
+1. Stash uncommitted changes
+2. Fetch and rebase on origin/main
+3. Run tests
+4. Restore stashed changes
 
 ### Handling Conflicts
 
@@ -400,7 +501,7 @@ If rebase conflicts occur:
 1. Identify conflicting files
 2. Check if file should be in this worktree's slice
 3. If yes: resolve conflict, continue rebase
-4. If no: coordinate with other worktree owner
+4. If no: slice boundaries were violated — fix the plan
 
 ```bash
 # After resolving conflicts
@@ -412,34 +513,36 @@ git rebase --continue
 <merge_workflow>
 ## Merge Workflow
 
-When a feature is complete:
+When all agents have committed with `COMPLETE:` prefix:
 
-### Step 1: Final Sync
 ```bash
-git fetch origin
-git rebase origin/main
-npm test  # Ensure tests pass
+/execute merge
 ```
 
-### Step 2: Merge to Main
-```bash
-git checkout main
-git merge --no-ff feature-auth -m "Merge feature-auth: User authentication"
-```
+This will:
+1. Verify all worktrees have `COMPLETE:` commits
+2. Merge each feature branch to main (--no-ff)
+3. Run tests/build validation
+4. Update PRD (🔄 → ✅ for merged features)
+5. Remove worktrees and branches
+6. Delete tracking files (.parallel-plan.md, .parallel-agents.md)
 
-### Step 3: Notify Other Worktrees
-Other worktrees should rebase:
-```bash
-# In other worktrees
-git fetch origin
-git rebase origin/main
-```
+### Output
 
-### Step 4: Clean Up (Optional)
-```bash
-# Remove worktree when done
-git worktree remove ../project-auth
-git branch -d feature-auth  # Delete local branch
+```markdown
+## Parallel Merge Complete!
+
+### Merged Branches
+- feature-canvas-core: abc123 - COMPLETE: Canvas graph
+- feature-parsing: def456 - COMPLETE: Parsing engine
+
+### PRD Updated
+- Canvas Graph: ✅ Complete (was 🔄)
+- Parsing Engine: ✅ Complete (was 🔄)
+
+### Next Up (per PRD)
+- 📋 Heatmap Overlay
+- 📋 Ghost Preview
 ```
 </merge_workflow>
 
@@ -464,8 +567,12 @@ All references in `references/`:
 <commands>
 ## Available Commands
 
-- `/parallel` — Setup, sync, or merge worktrees
-- `/slice` — Analyze codebase and suggest vertical slicing
+- `/plan` — Strategic planning: analyze codebase, clarify requirements, generate feature specs, output `.parallel-plan.md`
+- `/execute` — Execution: create worktrees, spawn agents, monitor progress
+- `/execute status` — Check agent progress
+- `/execute merge` — Merge completed branches, update PRD, cleanup
+- `/execute sync` — Sync worktree with main
+- `/execute clean` — Remove a specific worktree
 </commands>
 
 <anti_patterns>
