@@ -34,12 +34,7 @@ Run `/plan` first to generate `.parallel-plan.md` with:
 
 ## Safety Model
 
-**Why `--dangerously-skip-permissions` is safe here:**
-
-1. **Worktree isolation** — Each agent can only affect its own feature branch
-2. **PR review is the safety net** — Nothing hits main without human review
-3. **Worst case is a bad branch** — Delete it and re-run that slice
-4. **No credential exposure** — Agents work within repo boundary
+Worktree isolation + PR review makes `--dangerously-skip-permissions` safe here. Each agent can only affect its own feature branch. Worst case is a bad branch you delete and re-run.
 
 ---
 
@@ -84,7 +79,7 @@ git worktree list
 
 #### 3. Generate Task Prompts
 
-Write `.claude-task.md` in each worktree with full specs from the plan:
+Write `.claude-task.md` in each worktree. The spawned agent reads the full specs from the plan — keep the task prompt focused on context and boundaries:
 
 ```markdown
 # Task: [Slice Name]
@@ -92,98 +87,22 @@ Write `.claude-task.md` in each worktree with full specs from the plan:
 You are working in worktree: [path]
 Branch: [branch-name]
 
-## Recommended Skills
+## Skills
+Read these before starting: [list skill paths]
 
-Before starting, read these skills for patterns and best practices:
-- `[skill-1]` — [Why relevant to this slice]
-- `[skill-2]` — [Why relevant to this slice]
-
-Skills are located at: .claude/skills/[skill-name]/SKILL.md
-
----
-
-## Jobs to be Done
-
-| Job Type | Description |
-|----------|-------------|
-| **Functional** | [What user needs to accomplish] |
-| **Emotional** | [How user wants to feel] |
-| **Success** | [Measurable outcome] |
-
----
-
-## Design Spec
-
-**Layout**: [Description]
-
-**Visual Style**:
-- Colors: [Palette]
-- Typography: [Fonts]
-- Spacing: [Grid]
-
-**Component Hierarchy**:
-```
-[Component tree from plan]
-```
-
-**State Variations**:
-- Loading: [Description]
-- Empty: [Description]
-- Error: [Description]
-- Success: [Description]
-
----
-
-## UX Architecture
-
-**User Flow**:
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-
-**Entry Points**: [How users get here]
-**Exit Points**: [Where users go next]
-
-**Interactions**:
-| Element | Click | Hover | Drag | Keyboard |
-|---------|-------|-------|------|----------|
-| [Element] | [Action] | [Action] | [Action] | [Action] |
-
----
-
-## Technical Architecture
-
-**File Structure**:
-```
-[File tree from plan]
-```
-
-**State Management**: [Approach]
-**Data Flow**: [Description]
-**Integration**: [How it connects]
-
----
+## Spec
+[Copy the slice's JTBD, Design, UX, and Technical specs from .parallel-plan.md]
 
 ## Files You Own (modify freely)
-
 - [List from plan]
 
 ## Frozen Files (DO NOT MODIFY)
-
 - [List from plan]
 
----
-
-## Success Criteria
-
+## Done Criteria
 - [ ] [Criterion 1]
 - [ ] [Criterion 2]
-- [ ] [Criterion 3]
-- Commit when done with message starting with "COMPLETE:"
-
----
-
-Begin working now. Read the recommended skills first for patterns.
+- Commit when done: "COMPLETE: [description]"
 ```
 
 #### 4. Spawn Background Agents
@@ -212,8 +131,8 @@ Write `.parallel-agents.md` in main worktree:
 
 | Worktree | Branch | Task | Status |
 |----------|--------|------|--------|
-| ../${PROJECT}-[slice-1] | feature-[slice-1] | [description] | 🔄 Running |
-| ../${PROJECT}-[slice-2] | feature-[slice-2] | [description] | 🔄 Running |
+| ../${PROJECT}-[slice-1] | feature-[slice-1] | [description] | Running |
+| ../${PROJECT}-[slice-2] | feature-[slice-2] | [description] | Running |
 
 ## Check Progress
 
@@ -231,8 +150,8 @@ Run: `/execute merge`
 
 | Slice | Branch | Status |
 |-------|--------|--------|
-| [slice-1] | feature-[slice-1] | 🔄 Running |
-| [slice-2] | feature-[slice-2] | 🔄 Running |
+| [slice-1] | feature-[slice-1] | Running |
+| [slice-2] | feature-[slice-2] | Running |
 
 **Check progress:** `/execute status`
 **When all complete:** `/execute merge`
@@ -255,11 +174,11 @@ for worktree in $(git worktree list --porcelain | grep "^worktree" | awk '{print
   status=$(cd $worktree && git status --short | wc -l | tr -d ' ')
 
   if echo "$last_commit" | grep -q "COMPLETE:"; then
-    echo "✅ DONE  [$branch] $worktree: $last_commit"
+    echo "DONE  [$branch] $worktree: $last_commit"
   elif [ "$status" -gt 0 ]; then
-    echo "🔄 WIP   [$branch] $worktree: $status uncommitted changes"
+    echo "WIP   [$branch] $worktree: $status uncommitted changes"
   else
-    echo "🔄 WIP   [$branch] $worktree: $last_commit"
+    echo "WIP   [$branch] $worktree: $last_commit"
   fi
 done
 ```
@@ -271,8 +190,8 @@ done
 
 | Worktree | Branch | Last Commit | Status |
 |----------|--------|-------------|--------|
-| ../project-slice-1 | feature-slice-1 | COMPLETE: Canvas graph | ✅ Done |
-| ../project-slice-2 | feature-slice-2 | Add parser utils | 🔄 WIP |
+| ../project-slice-1 | feature-slice-1 | COMPLETE: Canvas graph | Done |
+| ../project-slice-2 | feature-slice-2 | Add parser utils | WIP |
 
 ### Actions
 
@@ -326,7 +245,7 @@ npm test || npm run build
 #### 3. Update PRD
 
 Update PRD completion markers:
-- Change 🔄 (in progress) to ✅ (complete) for merged features
+- Change In Progress to Complete for merged features
 - Add commit hashes and dates
 
 #### 4. Clean Up
@@ -357,12 +276,12 @@ git worktree prune
 - feature-slice-2: [hash] - COMPLETE: [message]
 
 ### Validation
-- Tests: ✅ Passing
-- Build: ✅ Success
+- Tests: Passing
+- Build: Success
 
 ### PRD Updated
-- [Feature 1]: ✅ Complete (was 🔄)
-- [Feature 2]: ✅ Complete (was 🔄)
+- [Feature 1]: Complete (was In Progress)
+- [Feature 2]: Complete (was In Progress)
 
 ### Cleanup
 - Worktrees removed: 2
@@ -370,8 +289,8 @@ git worktree prune
 - Tracking files removed
 
 ### Next Up (per PRD)
-- 📋 [Next feature 1]
-- 📋 [Next feature 2]
+- [Next feature 1]
+- [Next feature 2]
 ```
 
 ---
@@ -401,17 +320,10 @@ git stash pop
 
 ### Conflict Handling
 
-If rebase conflicts occur:
-
-```
-AskUserQuestion: "Rebase conflict detected in:
-- [List of conflicting files]
-
-Options:
+If rebase conflicts occur, use `AskUserQuestion` to present options:
 - Help resolve conflicts (walk through each file)
 - Abort rebase (return to previous state)
-- Skip problematic commit"
-```
+- Skip problematic commit
 
 ---
 
@@ -426,18 +338,9 @@ Removes a specific worktree and optionally its branch.
 cd [worktree-path] && git status
 ```
 
-```
-AskUserQuestion: "Remove worktree [path]?
-
-Branch: [branch-name]
-Status: [Clean/Has uncommitted changes]
-Merged to main: [Yes/No]
-
-Options:
-- Remove worktree only (keep branch)
-- Remove worktree and branch
-- Cancel"
-```
+Use `AskUserQuestion` to confirm:
+- Worktree path, branch name, clean/dirty status, merged-to-main status
+- Options: Remove worktree only / Remove worktree and branch / Cancel
 
 ```bash
 # Remove worktree
@@ -455,51 +358,21 @@ git worktree prune
 ## Error Handling
 
 ### Plan File Missing
-
 ```
-Error: .parallel-plan.md not found
-
-Run `/plan` first to:
-1. Analyze the codebase
-2. Clarify requirements
-3. Generate feature specifications
-4. Create the parallel plan
-
-Then run `/execute` again.
+No plan found. Run /plan first to analyze the codebase, clarify requirements,
+generate feature specs, and create the parallel plan. Then run /execute again.
 ```
 
 ### Branch Already Exists
-
-```
-Error: Branch 'feature-x' already exists
-
-Options:
-1. Delete existing branch: git branch -D feature-x
-2. Clean up existing worktree: git worktree remove ../project-x --force
-3. Use different branch name
-```
-
-### Agent Spawn Fails
-
-```
-Error: claude command not found
-
-Ensure Claude CLI is installed and in PATH.
-```
+Options: Delete existing branch, clean up existing worktree, or use different branch name.
 
 ### Merge Conflicts
-
-```
-Merge conflict detected.
-
-Recommendation: Resolve in feature branch, not main.
-
-1. cd [feature-worktree]
-2. git fetch origin && git rebase origin/main
+Resolve in feature branch, not main:
+1. `cd [feature-worktree]`
+2. `git fetch origin && git rebase origin/main`
 3. Resolve conflicts
-4. git add . && git rebase --continue
+4. `git add . && git rebase --continue`
 5. Return and merge again
-```
 
 ---
 
@@ -526,5 +399,4 @@ User: /execute merge
 - Reads from `.parallel-plan.md` (output of `/plan`)
 - Creates `.parallel-agents.md` for tracking
 - Updates PRD with completion markers on merge
-- Uses `parallel-development` skill patterns
 - Uses `COMPLETE:` commit prefix for completion detection

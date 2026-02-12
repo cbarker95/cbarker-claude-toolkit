@@ -30,13 +30,14 @@ A personal collection of reusable Claude Code customizations: skills, agents, an
 | **git-history-analyzer** | Analyze git history for code evolution |
 | **repo-research-analyst** | Research repository structure and patterns |
 
-### Commands (7)
+### Commands (8)
 
 | Command | Description |
 |---------|-------------|
 | `/compare` | Compare screenshot to Figma design |
 | `/a11y` | Run accessibility audit on a URL |
 | `/check` | Run full design verification on a URL |
+| `/ship` | End-to-end product-to-code pipeline with approval gate |
 | `/atomic-audit` | Audit codebase for atomic design compliance |
 | `/atomic-init` | Initialize atomic design system structure |
 | `/atomic-migrate` | Migrate components to atomic design |
@@ -101,7 +102,7 @@ Agents are used automatically by Claude when appropriate. They can also be invok
 cbarker-claude-toolkit/
 └── .claude/
     ├── agents/          # 13 specialized agents
-    ├── commands/        # 7 slash commands
+    ├── commands/        # 8 slash commands
     └── skills/          # 3 comprehensive skills
         ├── atomic-design-system/
         ├── agent-native-architecture/

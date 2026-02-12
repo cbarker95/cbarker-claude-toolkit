@@ -7,123 +7,29 @@ description: Strategic planning with detailed feature specs for parallel develop
 
 Strategic planning phase that evaluates the codebase, clarifies requirements, generates detailed feature specifications, updates the PRD, and outputs a slice plan with skill recommendations.
 
+**Boundary:** This command produces `.parallel-plan.md` and updates the PRD. It does NOT start implementation, install dependencies, create todos, or write code. Wait for the user to explicitly run `/execute`.
+
 ## Usage
 
 ```
 /plan [--prd=docs/product/PRD.md]
 ```
 
-## Purpose
-
-This command handles the **thinking** part of parallel development:
-- Understand what's already built
-- Clarify what needs to be built next
-- Create detailed specs (JTBD, design, UX, architecture)
-- Update PRD with completion markers
-- Plan vertical slices with skill recommendations
-
-The output is `.parallel-plan.md` — a reviewable plan ready for `/execute`.
-
----
-
-## IMPORTANT: Enter Plan Mode First
-
-**Before doing any evaluation or analysis, you MUST enter plan mode.**
-
-```
-1. Call EnterPlanMode tool immediately
-2. Wait for user approval to enter plan mode
-3. Only then proceed with discovery and analysis
-4. Write your plan to the plan file
-5. Exit plan mode with ExitPlanMode when ready for user approval
-6. After approval, execute: update PRD and write .parallel-plan.md
-```
-
-This ensures:
-- User approves the approach before any changes are made
-- Discovery happens without side effects
-- PRD updates only happen after explicit approval
-- Clear separation between planning and execution
-
 ---
 
 ## Workflow
 
-### Step 0: Enter Plan Mode
+### Phase 1: Discovery
 
-```
-EnterPlanMode()
-```
-
-Wait for user approval before proceeding.
-
----
-
-### Phase 1: Discovery (Parallel Agents)
-
-Launch parallel exploration to understand current state:
-
-```
-# Agent 1: PRD Analysis
-Task(subagent_type="Explore", prompt="
-Read the PRD at docs/product/PRD.md (or user-specified path).
-Extract:
-1. Product vision and goals
-2. Feature list with current status markers
-3. User flows and success metrics
-4. Technical constraints or requirements
-Return: Structured summary of PRD state
-")
-
-# Agent 2: Codebase Analysis
-Task(subagent_type="Explore", prompt="
-Analyze the codebase to understand:
-1. What features are actually implemented (match against PRD)
-2. Existing patterns (component structure, state management, styling)
-3. Directory organization and naming conventions
-4. Integration points (APIs, shared state, config)
-Return: Implementation status and patterns found
-")
-```
+Work in plan mode. Understand current state by analyzing the PRD (`docs/product/PRD.md` or user-specified path) and the codebase in parallel. Identify:
+- Feature status: what's complete, in progress, not started
+- Existing patterns: component structure, state management, styling approach
+- Integration points: APIs, shared state, config
+- Gaps between PRD intent and implementation reality
 
 ### Phase 2: Clarification
 
-Use `AskUserQuestion` to gather context:
-
-```
-AskUserQuestion: "Based on the PRD and codebase analysis:
-
-**Currently Complete:**
-- [List features with commits]
-
-**In Progress:**
-- [List partially implemented features]
-
-**Not Started:**
-- [List pending features]
-
-What's the focus for this session?"
-
-Options:
-- [Feature A] (highest priority per PRD)
-- [Feature B]
-- [Feature C]
-- Custom selection
-```
-
-Follow up as needed:
-
-```
-AskUserQuestion: "For [selected feature], I need to clarify the job-to-be-done:
-
-What problem does this solve for the user?
-
-Options:
-- [JTBD option 1]
-- [JTBD option 2]
-- [JTBD option 3]
-- Let me explain..."
-```
+Present the user with current status (complete / in progress / not started) and ask them to choose the session focus. Follow up on JTBD clarification as needed — what problem does the selected feature solve for the user?
 
 ### Phase 3: Feature Spec Generation
 
@@ -226,70 +132,39 @@ src/[feature]/
 - [Events emitted or listened to]
 ```
 
-### Phase 4: Write Plan to Plan File
+### Phase 4: Outputs
 
-Write all specifications and proposed PRD updates to the plan file (not directly to PRD yet):
-
-```markdown
-# Parallel Development Plan
-
-## Proposed PRD Updates
-
-[Show what will be added/changed in the PRD]
-
-## Feature Specifications
-
-[All JTBD, Design, UX, Technical specs]
-
-## Slice Definitions
-
-[Slice plan with skill recommendations]
-```
-
-### Phase 5: Exit Plan Mode
-
-```
-ExitPlanMode()
-```
-
-Wait for user approval of the plan.
-
----
-
-### Phase 6: Execute Plan (After Approval)
-
-Only after user approves the plan:
-
-1. **Update PRD** with completion markers
-2. **Write `.parallel-plan.md`** with slice definitions
+After user approves the plan, produce two artifacts:
 
 #### PRD Completion Markers
+
+Update the PRD with:
 
 ```markdown
 ## Implementation Status
 
-### ✅ Complete
+### Complete
 | Feature | Commit | Date |
 |---------|--------|------|
 | [Feature name] | [hash] | [date] |
 
-### 🔄 In Progress
+### In Progress
 | Feature | Branch | Owner | Notes |
 |---------|--------|-------|-------|
 | [Feature name] | [branch] | [agent] | [status] |
 
-### 📋 Next Up
+### Next Up
 | Feature | Priority | Dependencies | Estimated Slices |
 |---------|----------|--------------|------------------|
 | [Feature name] | P[0-3] | [deps] | [count] |
 
-### ⏸️ Deferred
+### Deferred
 | Feature | Reason |
 |---------|--------|
 | [Feature name] | [why deferred] |
 ```
 
-#### .parallel-plan.md Format
+#### .parallel-plan.md
 
 ```markdown
 # Parallel Development Plan
@@ -305,20 +180,20 @@ Only after user approves the plan:
 **Branch**: feature-[name]
 
 **Recommended Skills**:
-- `[skill-1]` — [Why this skill is relevant]
-- `[skill-2]` — [Why this skill is relevant]
+- `[skill-1]`
+- `[skill-2]`
 
 #### Jobs to be Done
-[Copy from feature spec]
+[From feature spec]
 
 #### Design Spec
-[Copy from feature spec]
+[From feature spec]
 
 #### UX Architecture
-[Copy from feature spec]
+[From feature spec]
 
 #### Technical Architecture
-[Copy from feature spec]
+[From feature spec]
 
 **Files Owned**:
 - [List of files/directories this slice can modify]
@@ -374,78 +249,8 @@ Based on slice requirements, recommend appropriate skills:
 
 ---
 
-## Example Session
-
-```
-User: /plan
-
-Claude: [Calls EnterPlanMode, waits for approval]
-
-User: [Approves plan mode]
-
-Claude: [Launches discovery agents in parallel]
-
-Claude: "Discovery complete. Here's what I found:
-
-**PRD Status:**
-- Vision: Design verification tool for PRs
-- 8 features defined, 3 complete, 2 in progress, 3 not started
-
-**Codebase Status:**
-- Next.js 14 with App Router
-- Tailwind CSS for styling
-- Workspace shell implemented
-- Chat interface implemented
-- Canvas graph not started
-
-What's the focus for this session?"
-
-User: "Canvas graph and parsing engine"
-
-Claude: "For the Canvas Graph, what's the primary job-to-be-done?
-
-1. Debug design debt (find pollution paths)
-2. Explore architecture (understand dependencies)
-3. Plan refactors (see blast radius)
-4. All of the above"
-
-User: "All of the above, starting with exploration"
-
-Claude: [Writes detailed plan to plan file]
-
-Claude: [Calls ExitPlanMode]
-
-"I've written the plan with detailed specifications:
-
-**Slice 1: Canvas Graph Core**
-- JTBD: Visualize component dependencies at a glance
-- Design: Full-viewport graph, node-edge visualization
-- UX: Hover for tooltips, click for selection, drag to pan
-- Skills: frontend-design, atomic-design-system
-
-**Slice 2: Parsing Engine**
-- JTBD: Extract import relationships from source files
-- Technical: ts-morph AST parsing
-- Skills: agent-native-architecture
-
-Please review and approve the plan."
-
-User: [Approves plan]
-
-Claude: [Updates PRD with markers, writes .parallel-plan.md]
-
-"Plan approved. Updated:
-- PRD now shows 🔄 markers for Canvas Graph and Parsing Engine
-- .parallel-plan.md written with full specifications
-
-Ready to execute with `/execute`"
-```
-
----
-
 ## Integration
 
 - Outputs feed into `/execute` command
-- Uses `parallel-development` skill patterns
 - References project-specific PRD location
 - Creates audit trail via PRD history
