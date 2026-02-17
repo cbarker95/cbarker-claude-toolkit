@@ -1,13 +1,13 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion, TodoWrite, EnterPlanMode, ExitPlanMode
-description: Strategic planning with detailed feature specs for parallel development
+description: Strategic planning with feature specs and execution strategy recommendation
 ---
 
 # Plan Command
 
-Strategic planning phase that evaluates the codebase, clarifies requirements, generates detailed feature specifications, updates the PRD, and outputs a slice plan with skill recommendations.
+Strategic planning phase that evaluates the codebase, clarifies requirements, and generates detailed feature specifications with success criteria.
 
-**Boundary:** This command produces `.parallel-plan.md` and updates the PRD. It does NOT start implementation, install dependencies, create todos, or write code. Wait for the user to explicitly run `/execute`.
+**Boundary:** This command produces `.dev-plan.md` and updates the PRD. It does NOT start implementation, install dependencies, create todos, or write code. Wait for the user to explicitly run `/execute`.
 
 ## Usage
 
@@ -136,9 +136,9 @@ src/[feature]/
 
 After user approves the plan, produce two artifacts:
 
-#### PRD Completion Markers
+#### PRD Update
 
-Update the PRD with:
+Update the PRD Implementation Status section:
 
 ```markdown
 ## Implementation Status
@@ -149,14 +149,14 @@ Update the PRD with:
 | [Feature name] | [hash] | [date] |
 
 ### In Progress
-| Feature | Branch | Owner | Notes |
-|---------|--------|-------|-------|
-| [Feature name] | [branch] | [agent] | [status] |
+| Feature | Branch | Notes |
+|---------|--------|-------|
+| [Feature name] | [branch] | [status] |
 
 ### Next Up
-| Feature | Priority | Dependencies | Estimated Slices |
-|---------|----------|--------------|------------------|
-| [Feature name] | P[0-3] | [deps] | [count] |
+| Feature | Priority | Dependencies |
+|---------|----------|--------------|
+| [Feature name] | P[0-3] | [deps] |
 
 ### Deferred
 | Feature | Reason |
@@ -164,77 +164,40 @@ Update the PRD with:
 | [Feature name] | [why deferred] |
 ```
 
-#### .parallel-plan.md
+#### .dev-plan.md
 
 ```markdown
-# Parallel Development Plan
+# Development Plan
 
 **Generated**: [date]
-**PRD Version**: [version]
 **Session Focus**: [description]
-
-## Slices
-
-### Slice 1: [Slice Name]
-
 **Branch**: feature-[name]
+**Status**: not started
 
-**Recommended Skills**:
-- `[skill-1]`
-- `[skill-2]`
+---
 
-#### Jobs to be Done
-[From feature spec]
+## Spec
 
-#### Design Spec
-[From feature spec]
+### Jobs to be Done
+[From Phase 3]
 
-#### UX Architecture
-[From feature spec]
+### Design Spec
+[From Phase 3]
 
-#### Technical Architecture
-[From feature spec]
+### UX Architecture
+[From Phase 3]
 
-**Files Owned**:
-- [List of files/directories this slice can modify]
+### Technical Architecture
+[From Phase 3]
 
-**Do NOT Modify** (frozen):
-- [List of shared/frozen files]
+---
 
-**Success Criteria**:
-- [ ] [Criterion 1]
+## Success Criteria
+- [ ] [Criterion 1 — from JTBD success criteria]
 - [ ] [Criterion 2]
-- Commit: "COMPLETE: [description]"
-
----
-
-### Slice 2: [Slice Name]
-[Same structure as Slice 1]
-
----
-
-## Merge Order
-1. [Slice with no dependencies first]
-2. [Dependent slices after]
-
-## Frozen Files (all slices)
-- package.json
-- tsconfig.json
-- [Other shared files]
+- [ ] `npm run build` passes
+- [ ] PRD updated with completion markers
 ```
-
----
-
-## Skill Recommendations
-
-Based on slice requirements, recommend appropriate skills:
-
-| Slice Type | Recommended Skills |
-|------------|-------------------|
-| UI Components | `frontend-design`, `atomic-design-system` |
-| Backend/Tools | `agent-native-architecture` |
-| Full Feature | `frontend-design`, skill matching domain |
-| Infrastructure | Domain-specific skills |
 
 ---
 
@@ -243,8 +206,8 @@ Based on slice requirements, recommend appropriate skills:
 1. **Updated PRD**: `docs/product/PRD.md` (or user-specified path)
    - Implementation Status section updated with markers
 
-2. **Parallel Plan**: `.parallel-plan.md`
-   - Full slice definitions with specs
+2. **Development Plan**: `.dev-plan.md`
+   - Feature specs + success criteria
    - Ready for `/execute`
 
 ---
