@@ -22,13 +22,13 @@ You still get a hard approval gate before any code is written. The mechanical ha
 
 ```
 Phase 1: Analyze    (auto)           → .ship/1-analysis.md
-Phase 2: Plan       (auto → STOP)    → .ship/2-plan.md + .dev-plan.md
+Phase 2: Plan       (auto → STOP)    → PRD updated with spec
          ── USER APPROVAL GATE ──
-Phase 3: Execute    (auto)           → .ship/3-execution.md
-Phase 4: Ship       (auto)           → .ship/4-summary.md + PRD updated
+Phase 3: Execute    (auto)           → .ship/2-execution.md
+Phase 4: Ship       (auto)           → .ship/3-summary.md + PRD updated
 ```
 
-Every phase produces an artifact file before the next phase starts. If any phase fails 3 times, stop and report rather than continuing.
+Every phase produces an artifact or PRD update before the next phase starts. If any phase fails 3 times, stop and report rather than continuing.
 
 ---
 
@@ -40,7 +40,7 @@ If `$ARGUMENTS` contains a goal description, use that. Otherwise:
 
 ### Auto-Detection
 Analyze the PRD and codebase in parallel:
-- Read `docs/product/PRD.md` — find the highest-priority unbuilt feature (check Priority Assessment if it exists, otherwise use feature status markers)
+- Read `docs/product/PRD.md` — find the highest-priority unbuilt feature
 - Scan the codebase — what's actually implemented vs. what the PRD claims
 - Check recent git history — what was shipped last, any in-progress work
 
@@ -75,23 +75,20 @@ Present the analysis to the user briefly before continuing to Phase 2. If the au
 
 ## Phase 2: Plan
 
-**Goal:** Produce a development plan for user approval.
+**Goal:** Write a feature spec into the PRD for user approval.
 
 This phase follows the same methodology as `/plan`:
 
 ### Spec Generation
 
-Produce:
+Produce and write into the PRD:
 - **Jobs to be Done** — functional, emotional, success criteria
 - **Design Spec** — layout, visual style, component hierarchy, state variations
 - **UX Architecture** — user flow, entry/exit points, interactions, feedback patterns
 - **Technical Architecture** — file structure, state management, data flow, integration points
+- **Success Criteria** — checklist including `npm run build` passes
 
-### Output: `.ship/2-plan.md` + `.dev-plan.md`
-
-`.ship/2-plan.md` is a human-readable summary. `.dev-plan.md` is the contract for Phase 3 (same format as `/plan` output).
-
-Also update the PRD with In Progress markers for the planned feature.
+Write the spec as an `### In Progress:` section in the PRD's Implementation Status.
 
 ### HARD STOP — User Approval Gate
 
@@ -108,7 +105,7 @@ Options:
 - Cancel — stop here, keep the plan for later
 ```
 
-**DO NOT proceed to Phase 3 until the user explicitly approves.** If they choose "Adjust," revise the plan and ask again. If they choose "Cancel," end the session with the plan artifacts intact.
+**DO NOT proceed to Phase 3 until the user explicitly approves.** If they choose "Adjust," revise the spec and ask again. If they choose "Cancel," end the session with the PRD spec intact.
 
 ---
 
@@ -123,7 +120,7 @@ Follow the same methodology as `/execute`:
 3. Commit at meaningful milestones with descriptive messages
 4. Fix build failures before continuing (3 attempts per failure, then stop)
 
-### Output: `.ship/3-execution.md`
+### Output: `.ship/2-execution.md`
 
 ```markdown
 # Execution Report
@@ -143,19 +140,13 @@ Follow the same methodology as `/execute`:
 
 ## Phase 4: Ship
 
-**Goal:** Update all tracking artifacts and produce a ship summary.
+**Goal:** Update PRD and produce a ship summary.
 
 ### PRD Update
-- Change In Progress → Complete for the feature
+- Convert `### In Progress:` section to a Complete entry
 - Add commit hashes and dates
 
-### Cleanup
-
-```bash
-rm -f .dev-plan.md
-```
-
-### Output: `.ship/4-summary.md`
+### Output: `.ship/3-summary.md`
 
 ```markdown
 # Ship Summary
@@ -172,7 +163,7 @@ rm -f .dev-plan.md
 - [List of significant files added or modified]
 
 ## PRD Status
-- [Feature name]: Complete (was Not Started)
+- [Feature name]: Complete (was In Progress)
 
 ## Next Recommended Action
 [What naturally follows — next PRD priority]
@@ -197,7 +188,7 @@ Next up per PRD: [next priority feature]
 Report what's missing. Suggest running `/plan` manually with more context.
 
 ### Phase 2 rejected by user
-End cleanly. Artifacts in `.ship/` are preserved for reference. User can run `/plan` separately to revise.
+End cleanly. PRD spec is preserved for reference. User can run `/plan` separately to revise.
 
 ### Phase 3 build failures
 After 3 failed fix attempts, stop and report with full error context.
@@ -209,7 +200,7 @@ Stop immediately. Report what succeeded, what failed, and what artifacts exist. 
 
 ## Artifact Cleanup
 
-The `.ship/` directory accumulates across runs. Each run overwrites the numbered files. To preserve history, the user can rename the directory before running again:
+The `.ship/` directory accumulates across runs. Each run overwrites the numbered files. To preserve history:
 
 ```bash
 mv .ship .ship-[feature-name]-[date]
@@ -219,7 +210,7 @@ mv .ship .ship-[feature-name]-[date]
 
 ## Integration
 
-- Combines the workflows of `/strategy` (analysis), `/plan` (spec), and `/execute` (build)
-- Produces `.dev-plan.md` (compatible with standalone `/execute`)
+- PRD is the single source of truth — no intermediate plan files
+- `.ship/` artifacts are session logs, not contracts
 - Updates PRD with status markers (compatible with `/strategy` reads)
 - User approval gate preserves human steering at the critical decision point

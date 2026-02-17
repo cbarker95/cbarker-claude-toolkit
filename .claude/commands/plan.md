@@ -1,13 +1,13 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion, TodoWrite, EnterPlanMode, ExitPlanMode
-description: Strategic planning with feature specs and execution strategy recommendation
+description: Strategic planning with feature specs and success criteria
 ---
 
 # Plan Command
 
-Strategic planning phase that evaluates the codebase, clarifies requirements, and generates detailed feature specifications with success criteria.
+Evaluates the codebase, clarifies requirements, generates feature specs, and writes them directly into the PRD.
 
-**Boundary:** This command produces `.dev-plan.md` and updates the PRD. It does NOT start implementation, install dependencies, create todos, or write code. Wait for the user to explicitly run `/execute`.
+**Boundary:** This command updates the PRD only. It does NOT start implementation, install dependencies, create todos, or write code. Wait for the user to explicitly run `/execute`.
 
 ## Usage
 
@@ -38,8 +38,6 @@ For each feature in scope, generate detailed specifications:
 #### 3.1 Jobs to be Done
 
 ```markdown
-## Jobs to be Done
-
 | Job Type | Description |
 |----------|-------------|
 | **Functional** | [What the user needs to accomplish] |
@@ -51,8 +49,6 @@ For each feature in scope, generate detailed specifications:
 #### 3.2 Design Spec
 
 ```markdown
-## Design Spec
-
 **Layout**: [Full description of spatial arrangement]
 
 **Visual Style**:
@@ -62,158 +58,96 @@ For each feature in scope, generate detailed specifications:
 - Effects: [Shadows, borders, animations]
 
 **Component Hierarchy**:
-```
 [Organism Name] (organism)
 ├── [Molecule Name] (molecule)
 │   ├── [Atom Name] (atom)
 │   └── [Atom Name] (atom)
 ├── [Molecule Name] (molecule)
 └── [Atom Name] (atom)
-```
 
 **State Variations**:
-- Loading: [Description]
-- Empty: [Description]
-- Error: [Description]
-- Success: [Description]
-- [Other relevant states]
+- Loading / Empty / Error / Success / [Other]
 ```
 
 #### 3.3 UX Architecture
 
 ```markdown
-## UX Architecture
-
 **User Flow**:
 1. [Entry point and initial state]
 2. [User action → System response]
-3. [User action → System response]
-4. [Completion/exit state]
+3. [Completion/exit state]
 
 **Entry Points**: [How users get here]
 **Exit Points**: [Where users go next]
 
 **Interactions**:
-| Element | Click | Hover | Drag | Keyboard |
-|---------|-------|-------|------|----------|
-| [Element 1] | [Action] | [Action] | [Action] | [Action] |
-| [Element 2] | [Action] | [Action] | [Action] | [Action] |
+| Element | Click | Hover | Keyboard |
+|---------|-------|-------|----------|
+| [Element] | [Action] | [Action] | [Action] |
 
-**Feedback Patterns**:
-- Loading: [How loading is communicated]
-- Success: [How success is communicated]
-- Error: [How errors are communicated]
+**Feedback Patterns**: Loading / Success / Error
 ```
 
 #### 3.4 Technical Architecture
 
 ```markdown
-## Technical Architecture
-
 **File Structure**:
-```
 src/[feature]/
 ├── [Component].tsx
 ├── [Component].module.css
-├── [hooks/]
-│   └── use[Feature].ts
-├── [lib/]
-│   └── [utility].ts
+├── [hooks/] → use[Feature].ts
+├── [lib/] → [utility].ts
 └── types.ts
-```
 
-**State Management**: [Approach - React state, context, external store]
-
+**State Management**: [Approach]
 **Data Flow**: [Source] → [Transform] → [Render]
-
-**Integration Points**:
-- [How this connects to existing code]
-- [APIs or services consumed]
-- [Events emitted or listened to]
+**Integration Points**: [How this connects to existing code]
 ```
 
-### Phase 4: Outputs
+### Phase 4: Write to PRD
 
-After user approves the plan, produce two artifacts:
-
-#### PRD Update
-
-Update the PRD Implementation Status section:
+Write the feature spec directly into the PRD under a new section:
 
 ```markdown
-## Implementation Status
+### In Progress: [Feature Name]
 
-### Complete
-| Feature | Commit | Date |
-|---------|--------|------|
-| [Feature name] | [hash] | [date] |
-
-### In Progress
-| Feature | Branch | Notes |
-|---------|--------|-------|
-| [Feature name] | [branch] | [status] |
-
-### Next Up
-| Feature | Priority | Dependencies |
-|---------|----------|--------------|
-| [Feature name] | P[0-3] | [deps] |
-
-### Deferred
-| Feature | Reason |
-|---------|--------|
-| [Feature name] | [why deferred] |
-```
-
-#### .dev-plan.md
-
-```markdown
-# Development Plan
-
-**Generated**: [date]
-**Session Focus**: [description]
 **Branch**: feature-[name]
-**Status**: not started
+**Started**: [date]
 
----
-
-## Spec
-
-### Jobs to be Done
+#### Jobs to be Done
 [From Phase 3]
 
-### Design Spec
+#### Design Spec
 [From Phase 3]
 
-### UX Architecture
+#### UX Architecture
 [From Phase 3]
 
-### Technical Architecture
+#### Technical Architecture
 [From Phase 3]
 
----
-
-## Success Criteria
-- [ ] [Criterion 1 — from JTBD success criteria]
+#### Success Criteria
+- [ ] [Criterion 1]
 - [ ] [Criterion 2]
 - [ ] `npm run build` passes
-- [ ] PRD updated with completion markers
 ```
+
+Place this in the Implementation Status section, after "Complete" entries and before "Not Started."
+
+When the feature ships, `/execute` converts this to a "Complete" entry with commit hash and date.
 
 ---
 
-## Output Files
+## Output
 
-1. **Updated PRD**: `docs/product/PRD.md` (or user-specified path)
-   - Implementation Status section updated with markers
-
-2. **Development Plan**: `.dev-plan.md`
-   - Feature specs + success criteria
-   - Ready for `/execute`
+**Updated PRD**: `docs/product/PRD.md` (or user-specified path)
+- Feature spec written into Implementation Status
+- Ready for `/execute`
 
 ---
 
 ## Integration
 
-- Outputs feed into `/execute` command
-- References project-specific PRD location
-- Creates audit trail via PRD history
+- PRD is the single source of truth — no intermediate plan files
+- `/execute` reads the In Progress spec from the PRD
+- `/strategy` reads/writes the same PRD
