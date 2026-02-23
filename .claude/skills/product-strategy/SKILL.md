@@ -76,6 +76,7 @@ Strategy is ongoing, not one-time:
 5. **Define success metrics** — Establish KPIs, OKRs, or success criteria
 6. **Scope decisions** — Help prioritize Must/Should/Won't have features
 7. **Decision framework** — Work through a specific product decision with structured thinking
+8. **Discover features** — Research and propose new features for the PRD
 
 **Wait for response before proceeding.**
 </intake>
@@ -90,6 +91,7 @@ Strategy is ongoing, not one-time:
 | 5, "metrics", "okr", "kpi", "success" | Read [prd-templates.md](./references/prd-templates.md) (metrics section) and [decision-frameworks.md](./references/decision-frameworks.md) |
 | 6, "scope", "prioritize", "must have", "mvp" | Read [roadmap-frameworks.md](./references/roadmap-frameworks.md) (prioritization section) |
 | 7, "decision", "trade-off", "choose" | Read [decision-frameworks.md](./references/decision-frameworks.md) |
+| 8, "discover", "propose", "features", "ideas", "what to build" | Read [feature-discovery.md](./references/feature-discovery.md), offer to run `/discover` |
 
 **After reading references, apply frameworks to the user's specific context.**
 </routing>
@@ -115,22 +117,31 @@ For comprehensive strategy work, launch these agents **in parallel**:
          └─────────────────────────┘
 ```
 
-### Planning Phase (Sequential)
+### Feature Discovery Phase (Parallel)
+```
+┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐
+│ market-researcher       │  │ codebase-analyst        │  │ prd-gap-analyst         │
+│ → Web search for trends │  │ → What's built, what's  │  │ → Vision vs features,   │
+│   and competitor data   │  │   feasible              │  │   flow gaps, extensions │
+└───────────┬─────────────┘  └───────────┬─────────────┘  └───────────┬─────────────┘
+            │                            │                            │
+            └────────────────┬───────────┘────────────────────────────┘
+                             ▼
+              ┌─────────────────────────┐
+              │ feature-proposer        │
+              │ → Synthesizes into 3-7  │
+              │   feature proposals     │
+              └─────────────────────────┘
+```
+
+### Execution Phase (Sequential)
 ```
 ┌─────────────────────────┐
-│ roadmap-synthesizer     │
-│ → Creates prioritized   │
-│   roadmap from PRD      │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────────────────────────┐
-│ Development workflow                        │
-│                                             │
-│ /dev → Parallel startup with PRD context    │
-│     → Work loop with blog updates           │
-│     → Iteration until features complete     │
-└─────────────────────────────────────────────┘
+│ /ship                   │
+│ → Picks next feature    │
+│   from PRD, builds it,  │
+│   marks complete        │
+└─────────────────────────┘
 ```
 </parallel_agents>
 

@@ -145,22 +145,19 @@ Write a **Product Requirements Document** to `docs/product/PRD.md`:
 
 ---
 
-## Feature Scope
+## Feature Status
 
-### Must Have (MVP)
-| Feature | Description | Why Essential |
-|---------|-------------|---------------|
-| [Feature 1] | [Description] | [Rationale] |
+<!-- Status: NOT STARTED | IN PROGRESS | COMPLETE | BLOCKED | DEFERRED -->
+<!-- Priority: P0 (MVP) | P1 (post-MVP) | P2 (future) | -- (deferred) -->
+<!-- /ship reads this table to pick the next feature and updates it with progress -->
 
-### Should Have (v1.1)
-| Feature | Description | Value |
-|---------|-------------|-------|
-| [Feature 2] | [Description] | [Rationale] |
-
-### Won't Have (Out of Scope)
-| Feature | Why Not Now |
-|---------|-------------|
-| [Feature 3] | [Rationale] |
+| Feature | Priority | Status | Notes |
+|---------|----------|--------|-------|
+| [Feature 1] | P0 | NOT STARTED | [brief description] |
+| [Feature 2] | P0 | NOT STARTED | [brief description] |
+| [Feature 3] | P1 | NOT STARTED | [brief description] |
+| [Feature 4] | P2 | NOT STARTED | [brief description] |
+| [Feature 5] | -- | DEFERRED | Out of scope. [rationale] |
 
 ---
 
@@ -213,4 +210,4 @@ Create the `docs/product/` directory if it doesn't exist.
 End with:
 1. Summary of key decisions made
 2. Location of the PRD
-3. Recommended next actions (consider suggesting `/dev` for implementation)
+3. Recommended next actions (suggest `/ship` to start building the next feature)

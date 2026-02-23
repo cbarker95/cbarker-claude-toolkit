@@ -1,225 +1,141 @@
 ---
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion, TodoWrite, TaskOutput
-description: End-to-end product-to-code pipeline — strategy, plan, execute, ship
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion, TodoWrite
+description: Ship the next feature from the PRD — find it, build it, verify it, mark it done
 ---
 
 # Ship Command
 
-Orchestrates the full `/strategy` → `/plan` → `/execute` pipeline in a single session. Takes a product goal (or auto-detects the next priority) and produces shipped, tested code with PRD updated.
+Read the PRD, pick the next feature, build it, verify it, update the PRD. That's it.
 
-You still get a hard approval gate before any code is written. The mechanical handoffs between commands are eliminated.
+You are Opus. You know how to plan and implement. This command gives you the loop, not the methodology.
 
 ## Usage
 
 ```
-/ship [goal description]
-/ship                     # auto-detect next priority from PRD
+/ship [feature name or goal]
+/ship                          # auto-detect next feature from PRD
 ```
 
 ---
 
-## Pipeline Overview
+## Step 1: Find the PRD and identify the target
 
-```
-Phase 1: Analyze    (auto)           → .ship/1-analysis.md
-Phase 2: Plan       (auto → STOP)    → .ship/2-plan.md + .dev-plan.md
-         ── USER APPROVAL GATE ──
-Phase 3: Execute    (auto)           → .ship/3-execution.md
-Phase 4: Ship       (auto)           → .ship/4-summary.md + PRD updated
-```
+Locate the PRD. Check these paths in order:
+- `docs/product/PRD.md`
+- `docs/PRD.md`
+- `PRD.md`
+- Any `*.md` file containing a `## Feature Status` table
 
-Every phase produces an artifact file before the next phase starts. If any phase fails 3 times, stop and report rather than continuing.
+If no PRD is found, tell the user and suggest running `/prd` first. Stop.
 
----
+Read the **Feature Status** table from the PRD.
 
-## Phase 1: Analyze
+**If `$ARGUMENTS` is provided:** Match it to a feature in the table. If no exact match, use your judgment to find the closest one or treat it as a new goal that maps to a PRD feature.
 
-**Goal:** Understand current state and identify what to build.
-
-If `$ARGUMENTS` contains a goal description, use that. Otherwise:
-
-### Auto-Detection
-Analyze the PRD and codebase in parallel:
-- Read `docs/product/PRD.md` — find the highest-priority unbuilt feature (check Priority Assessment if it exists, otherwise use feature status markers)
-- Scan the codebase — what's actually implemented vs. what the PRD claims
-- Check recent git history — what was shipped last, any in-progress work
-
-### Output: `.ship/1-analysis.md`
-
-```markdown
-# Ship Analysis
-
-**Date**: [date]
-**Goal**: [from user args or auto-detected]
-
-## Current State
-- Last shipped: [recent commit summary]
-- PRD status: [X complete, Y in progress, Z not started]
-
-## Target Feature
-**Name**: [feature name]
-**Priority**: [from PRD or inferred]
-**JTBD**: [1-sentence job-to-be-done]
-
-## Why This Feature Next
-[2-3 sentences grounding the choice in PRD priorities, dependencies, or user input]
-
-## Scope Assessment
-- Key dependencies: [list]
-- Risk areas: [anything that might complicate execution]
-```
-
-Present the analysis to the user briefly before continuing to Phase 2. If the auto-detected feature seems wrong, the user can redirect here.
+**If no arguments:** Select the highest-priority feature that is `NOT STARTED`. Priority order: P0 > P1 > P2. Within the same priority, prefer features with no unmet dependencies.
 
 ---
 
-## Phase 2: Plan
+## Step 2: Confirm with the user
 
-**Goal:** Produce a development plan for user approval.
-
-This phase follows the same methodology as `/plan`:
-
-### Spec Generation
-
-Produce:
-- **Jobs to be Done** — functional, emotional, success criteria
-- **Design Spec** — layout, visual style, component hierarchy, state variations
-- **UX Architecture** — user flow, entry/exit points, interactions, feedback patterns
-- **Technical Architecture** — file structure, state management, data flow, integration points
-
-### Output: `.ship/2-plan.md` + `.dev-plan.md`
-
-`.ship/2-plan.md` is a human-readable summary. `.dev-plan.md` is the contract for Phase 3 (same format as `/plan` output).
-
-Also update the PRD with In Progress markers for the planned feature.
-
-### HARD STOP — User Approval Gate
+Present the target feature and ask for confirmation:
 
 ```
-AskUserQuestion: "Here's the plan for [feature name]:
+AskUserQuestion: "Next up from the PRD:
 
-[Key specs and architectural decisions to highlight]
+**[Feature Name]** (Priority: [P-level], Status: [current status])
+[Description from PRD if available]
 
-Approve to begin execution, or adjust the plan."
+Ship this feature?"
 
 Options:
-- Approved — start building
-- Adjust — [describe changes needed]
-- Cancel — stop here, keep the plan for later
+- Yes — start building
+- Pick a different one — [tell me which]
+- Cancel
 ```
 
-**DO NOT proceed to Phase 3 until the user explicitly approves.** If they choose "Adjust," revise the plan and ask again. If they choose "Cancel," end the session with the plan artifacts intact.
+If the user picks a different feature, use that instead. If they cancel, stop.
 
 ---
 
-## Phase 3: Execute
+## Step 3: Mark IN PROGRESS in the PRD
 
-**Goal:** Build the feature with build verification.
+Update the Feature Status table in the PRD:
+- Set the target feature's Status to `IN PROGRESS`
+- Add today's date in the Notes column
 
-Follow the same methodology as `/execute`:
-
-1. Create feature branch from main
-2. Build the feature, verifying `npm run build` at meaningful checkpoints
-3. Commit at meaningful milestones with descriptive messages
-4. Fix build failures before continuing (3 attempts per failure, then stop)
-
-### Output: `.ship/3-execution.md`
-
-```markdown
-# Execution Report
-
-**Branch**: feature-[name]
-**Commits**: [count]
-**Build**: Pass
-
-## What Was Built
-- [Summary of key changes]
-
-## Key Files
-- [List of significant files added or modified]
-```
+Do this now, before any implementation begins, so the PRD reflects reality.
 
 ---
 
-## Phase 4: Ship
+## Step 4: Build the feature
 
-**Goal:** Update all tracking artifacts and produce a ship summary.
+Implement the feature. You have full discretion over how to do this:
+- Read the codebase to understand patterns, conventions, and architecture
+- Plan your approach
+- Write the code
+- Use whatever strategy fits the feature and codebase
 
-### PRD Update
-- Change In Progress → Complete for the feature
-- Add commit hashes and dates
+**The only constraint is: leave the codebase in a working state when you're done.** Tests should pass. The build should succeed. If the project has neither tests nor a build step, verify the change works by whatever means are available.
 
-### Cleanup
-
-```bash
-rm -f .dev-plan.md
-```
-
-### Output: `.ship/4-summary.md`
-
-```markdown
-# Ship Summary
-
-**Feature**: [name]
-**Date**: [date]
-**Goal**: [original goal from Phase 1]
-**Branch**: feature-[name]
-
-## What Shipped
-- [1-line summary of what was built]
-
-## Key Files Changed
-- [List of significant files added or modified]
-
-## PRD Status
-- [Feature name]: Complete (was Not Started)
-
-## Next Recommended Action
-[What naturally follows — next PRD priority]
-```
-
-### Final Report to User
-
-```
-Ship complete: [feature name]
-
-Shipped: [summary]
-
-PRD updated. Ship artifacts in .ship/ directory.
-Next up per PRD: [next priority feature]
-```
+Do not generate intermediate artifact files. The PRD is the only tracking artifact.
 
 ---
 
-## Failure Modes
+## Step 5: Verify
 
-### Phase 1 fails (no PRD, empty codebase)
-Report what's missing. Suggest running `/plan` manually with more context.
+Run the project's verification steps. Detect what's available:
+- If a test command exists (test scripts in package.json, Makefile, pytest, cargo test, go test, etc.), run it
+- If a build command exists, run it
+- If neither exists, do a manual review: check for syntax errors, broken imports, obvious regressions
 
-### Phase 2 rejected by user
-End cleanly. Artifacts in `.ship/` are preserved for reference. User can run `/plan` separately to revise.
-
-### Phase 3 build failures
-After 3 failed fix attempts, stop and report with full error context.
-
-### Any phase fails 3 times
-Stop immediately. Report what succeeded, what failed, and what artifacts exist. Do not attempt to continue past a triple failure.
+If verification fails, fix the issues. If you cannot fix them after a reasonable effort, report what's broken and leave the feature marked IN PROGRESS.
 
 ---
 
-## Artifact Cleanup
+## Step 6: Mark COMPLETE in the PRD
 
-The `.ship/` directory accumulates across runs. Each run overwrites the numbered files. To preserve history, the user can rename the directory before running again:
+If verification passed:
+- Set the target feature's Status to `COMPLETE`
+- Add today's date and a brief note (e.g., "Shipped 2026-02-23")
 
-```bash
-mv .ship .ship-[feature-name]-[date]
+If verification failed and you could not fix it:
+- Leave the feature as `IN PROGRESS`
+- Add a note explaining what's blocking
+
+---
+
+## Step 7: Report
+
+Tell the user what happened:
+
+```
+Shipped: [Feature Name]
+
+What was built:
+- [2-4 bullet summary of what was implemented]
+
+Verification:
+- [Tests: pass/fail/none]
+- [Build: pass/fail/none]
+
+PRD updated: [Feature] marked COMPLETE.
+
+Next up: [Next highest-priority NOT STARTED feature, or "All features complete"]
 ```
 
+If the feature was NOT completed, adjust the report — explain what shipped, what didn't, and what's needed.
+
 ---
 
-## Integration
+## Edge Cases
 
-- Combines the workflows of `/strategy` (analysis), `/plan` (spec), and `/execute` (build)
-- Produces `.dev-plan.md` (compatible with standalone `/execute`)
-- Updates PRD with status markers (compatible with `/strategy` reads)
-- User approval gate preserves human steering at the critical decision point
+**No PRD found:** Tell the user. Suggest `/prd`. Stop.
+
+**No NOT STARTED features:** Tell the user all PRD features are complete or in progress. Ask if they want to work on an IN PROGRESS or BLOCKED item, or add new features to the PRD.
+
+**Feature depends on something not yet built:** Note the dependency. Ask the user whether to build the dependency first or proceed anyway.
+
+**Feature is already IN PROGRESS:** Ask the user if they want to continue it or restart it.
+
+**Feature is BLOCKED or DEFERRED:** Show the notes. Ask the user if the blocker is resolved and they want to proceed.
