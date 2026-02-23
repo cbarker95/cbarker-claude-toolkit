@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Write, Edit, Glob, Grep, Task, AskUserQuestion, TodoWrite, WebSearch, WebFetch
+allowed-tools: Read, Write, Edit, Glob, Grep, Task, AskUserQuestion, TodoWrite, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 description: Research and propose new features for the PRD based on market, codebase, and gap analysis
 ---
 
@@ -13,6 +13,12 @@ Research a product area and propose concrete, buildable features for the PRD. Yo
 /discover [topic or problem area]
 /discover                          # auto-detect gaps from PRD
 ```
+
+---
+
+## Enter Plan Mode
+
+Call `EnterPlanMode` immediately. All research and proposal work (Steps 1-4) happens in plan mode. The user approves the proposals before any PRD changes are made.
 
 ---
 
@@ -136,6 +142,12 @@ Produce 3-7 proposals. Each proposal needs:
 - Evidence from research
 - Dependencies
 - PRD table row format
+
+---
+
+## Exit Plan Mode
+
+Write the feature proposals to the plan file, then call `ExitPlanMode`. The user reviews and approves the proposals before any PRD changes are made. If the user rejects or requests changes, revise the proposals and exit plan mode again.
 
 ---
 
