@@ -156,9 +156,11 @@ For each iteration, output:
 
 When invoked, you should:
 
-### Step 0: Check for Design Skills in Context
+### Step 0: Load Design Context
 
-**Design skills like swiss-design, frontend-design, etc. are automatically loaded when invoked by the user.** Check your context for active skill instructions.
+**Step 0a: Check for project design language.** Look for `docs/design/DESIGN_LANGUAGE.md`, then `docs/DESIGN_LANGUAGE.md`, then `DESIGN_LANGUAGE.md`. If found, read it and use it as the baseline for ALL iterations. The design language defines: color palette, typography scale, spacing grid, border radius, shadows, component patterns, and anti-patterns. Respect anti-patterns — they override generic defaults.
+
+**Step 0b: Check for design skills in context.** Design skills like frontend-design, swiss-design, etc. are automatically loaded when invoked by the user. Check your context for active skill instructions.
 
 If the user mentions a design style (Swiss, minimalist, Stripe-like, etc.), look for:
 - Loaded skill instructions in your system context
@@ -170,6 +172,8 @@ Key principles to extract from any loaded design skill:
 - Color philosophy
 - Layout principles (asymmetry, whitespace)
 - Anti-patterns to avoid
+
+**Priority order:** Project design language (most specific) > loaded design skill > generic design principles.
 
 ### Step 1-5: Continue with iteration cycle
 

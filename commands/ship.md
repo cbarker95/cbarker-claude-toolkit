@@ -72,6 +72,7 @@ Do this now, before any implementation begins, so the PRD reflects reality.
 
 Implement the feature. You have full discretion over how to do this:
 - Read the codebase to understand patterns, conventions, and architecture
+- If the feature involves UI work, check for `docs/design/DESIGN_LANGUAGE.md`. If found, read and follow its visual constraints (colors, typography, spacing, shadows, component patterns, anti-patterns)
 - Plan your approach
 - Write the code
 - Use whatever strategy fits the feature and codebase
