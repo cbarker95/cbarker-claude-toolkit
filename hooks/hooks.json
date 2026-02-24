@@ -1,0 +1,17 @@
+{
+  "description": "Auto-format source files after edits using the project's configured formatter",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/format-file.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

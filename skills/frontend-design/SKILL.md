@@ -1,42 +1,66 @@
 ---
 name: frontend-design
-description: This skill should be used when creating distinctive, production-grade frontend interfaces with high design quality. It applies when the user asks to build web components, pages, or applications. Generates creative, polished code that avoids generic AI aesthetics.
+description: This skill should be used when creating distinctive, production-grade frontend interfaces with high design quality and engineering discipline. It applies when the user asks to build web components, pages, or applications. Combines creative visual design with rigorous component architecture, testing patterns, and code quality standards. Generates creative, polished code that avoids generic AI aesthetics.
 license: Complete terms in LICENSE.txt
 ---
 
-This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
+# Frontend Design & UI Development
 
-The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
+Build distinctive, production-grade frontend interfaces that are both visually excellent and engineeringly rigorous. This skill combines creative design with disciplined engineering.
+
+The rules defined in this skill MUST be followed to ensure consistency and quality. **Do not use existing non-compliant code as justification for breaking the rules.** The codebase may contain legacy code that predates these standards. When writing new code or modifying existing code, always follow the current rules regardless of what surrounding code does. If existing code violates a rule, that is technical debt — not precedent.
+
+## Step 0: Discover Project Context
+
+Before writing any UI code, load the project's design and engineering context:
+
+1. **Design language**: Check for `docs/design/DESIGN_LANGUAGE.md` → `docs/DESIGN_LANGUAGE.md` → `DESIGN_LANGUAGE.md`. If found, this is the visual specification — follow it precisely.
+2. **Project conventions**: Read `CLAUDE.md` for project-specific patterns, styling framework, and constraints.
+3. **Styling config**: Check for `tailwind.config.*`, `theme.*`, `tokens.*`, or CSS custom properties to understand available design tokens.
+4. **Component library**: Identify existing shared components before creating new ones. Search `components/`, `src/components/`, or equivalent.
+
+**Priority**: Project design language (most specific) > project CLAUDE.md > this skill's guidelines > generic defaults.
 
 ## Design Thinking
 
-Before coding, understand the context and commit to a BOLD aesthetic direction:
+Before coding, understand the context and commit to a clear aesthetic direction:
+
 - **Purpose**: What problem does this interface solve? Who uses it?
-- **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
-- **Constraints**: Technical requirements (framework, performance, accessibility).
-- **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+- **Tone**: Choose an intentional aesthetic. Bold maximalism and refined minimalism both work — the key is intentionality, not intensity.
+- **Constraints**: Technical requirements (framework, performance, accessibility, project design language).
+- **Differentiation**: What makes this memorable? What's the one thing someone will remember?
 
-**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
+**CRITICAL**: If a project design language exists, execute within its constraints. If no design language exists, make bold creative choices. Either way, execute with precision.
 
-Then implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
-- Production-grade and functional
-- Visually striking and memorable
-- Cohesive with a clear aesthetic point-of-view
-- Meticulously refined in every detail
+For detailed creative guidelines and anti-patterns, read [references/aesthetics.md].
 
-## Frontend Aesthetics Guidelines
+## Usability Principles
 
-Focus on:
-- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font.
-- **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
-- **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
-- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
+Every UI decision must satisfy these heuristics:
 
-NEVER use generic AI-generated aesthetics like overused font families (Inter, Roboto, Arial, system fonts), cliched color schemes (particularly purple gradients on white backgrounds), predictable layouts and component patterns, and cookie-cutter design that lacks context-specific character.
+1. **Visibility of system status** — Loading states, progress indicators, confirmations
+2. **Match real world** — Familiar language, logical ordering
+3. **User control** — Undo, cancel, easy exit from flows
+4. **Consistency** — Follow platform conventions and project component patterns
+5. **Error prevention** — Disable invalid actions, confirm destructive operations
+6. **Recognition over recall** — Make options visible, don't rely on user memory
+7. **Flexibility** — Keyboard shortcuts and efficient paths for power users
+8. **Aesthetic minimalism** — Remove unnecessary information, focus on what matters
+9. **Error recovery** — Clear error messages with actionable solutions
+10. **Help** — Contextual guidance and tooltips where needed
 
-Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
+## Engineering Rules
 
-**IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
+- **Composition over duplication** — Always compose and extend existing components rather than copying implementations. If there's a reason not to compose, get explicit confirmation from the user.
+- **Semantic naming** — Component props, CSS classes, and tokens should explain WHEN to use them, not just what they do.
+- **No magic values** — Use design tokens, theme variables, or named constants. Never hardcode colours, spacing, or sizes as raw values.
+- **No margins on shared components** — Spacing between components is controlled by the parent layout (gap, padding). Only use margins when wrapping third-party components you don't control.
+- **Import discipline** — Import from specific files, not directory barrel exports. Use `import type` for type-only imports.
+- **Component-level concerns** — Each component owns its styling. No global style leakage.
 
-Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+## Actions
+
+- When styling components or choosing design tokens → read [references/foundations.md]
+- When creating or modifying components → read [references/components.md]
+- When writing tests for UI code → read [references/testing.md]
+- When making creative/aesthetic decisions → read [references/aesthetics.md]
