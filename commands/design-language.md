@@ -34,14 +34,9 @@ Look for an existing design language document:
 
 **If found AND `$ARGUMENTS` contains "update":** Read it. This is an update — preserve existing decisions, integrate new references. Proceed to Step 2.
 
-**If found AND no "update":** Tell the user a design language already exists. Ask:
-```
-AskUserQuestion: "A design language already exists at [path]. What would you like to do?"
-Options:
-- Update it — integrate new references while preserving existing decisions
-- Replace it — start fresh from new references
-- Cancel — keep the existing one
-```
+**If found AND no "update":** Tell the user a design language already exists. Use `AskUserQuestion` to ask what to do. Provide options: "Update it", "Replace it", and "Cancel".
+
+**STOP. Do not proceed until the user responds.**
 
 **If not found:** Proceed to Step 2.
 
@@ -102,16 +97,9 @@ Wait for both agents to complete. If no arguments were provided, only Agent 1 ru
 
 If no references were provided as arguments, ask the user:
 
-```
-AskUserQuestion: "I've analyzed your current styling. To define your design language, I need visual references.
+Use `AskUserQuestion` to ask what references to work from. Provide options: "Mood keywords", "URLs", "Screenshots", and "Current codebase only".
 
-What should I work from?"
-Options:
-- Mood keywords — describe the aesthetic (e.g., "warm minimal", "dark professional")
-- URLs — products whose visual style you admire
-- Screenshots — you'll paste or describe reference images
-- Current codebase only — define the language from what already exists
-```
+**STOP. Do not proceed until the user responds.**
 
 If the user provides references, launch Agent 2 from Step 2 to analyze them.
 
@@ -163,13 +151,9 @@ Upon approval, write the document:
 
 1. Create `docs/design/` directory if it doesn't exist
 2. Write `docs/design/DESIGN_LANGUAGE.md` with the approved content
-3. If a Tailwind config exists, ask the user:
-   ```
-   AskUserQuestion: "Should I also update the Tailwind config with the new design tokens?"
-   Options:
-   - Yes — update tailwind.config.* with the colors, shadows, radius, and line-heights from the design language
-   - No — I'll update it manually
-   ```
+3. If a Tailwind config exists, use `AskUserQuestion` to ask whether to update it with the new design tokens. Provide options: "Yes — update tailwind.config" and "No — I'll update it manually".
+
+   **STOP. Do not proceed until the user responds.**
 
 ---
 

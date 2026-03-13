@@ -71,16 +71,9 @@ Based on discovery, identify gaps:
 - [Tool]: Only handles [subset], missing [rest]
 ```
 
-Present gaps to user with AskUserQuestion:
+Use `AskUserQuestion` to present the capability gaps to the user and ask which to prioritize for tool design. List the critical and important gaps, and provide options for prioritization.
 
-```
-"I found these capability gaps:
-- [Critical gap 1]
-- [Critical gap 2]
-- [Important gap 3]
-
-Which should we prioritize for tool design?"
-```
+**STOP. Do not proceed to Phase 3 until the user responds.**
 
 ## Phase 3: Tool Design
 

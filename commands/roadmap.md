@@ -62,16 +62,9 @@ Return dependency map."
 
 ## Phase 2: Prioritization Framework
 
-Ask user about prioritization approach:
+Use `AskUserQuestion` to ask the user which prioritization framework to use. Provide options: "Now/Next/Later", "RICE scoring", "MoSCoW", and "Custom criteria".
 
-```
-"How would you like to prioritize the roadmap?
-
-- Now/Next/Later (simple, flexible)
-- RICE scoring (Reach, Impact, Confidence, Effort)
-- MoSCoW (Must, Should, Could, Won't)
-- Custom criteria"
-```
+**STOP. Do not proceed until the user responds.**
 
 ### Now/Next/Later
 
@@ -215,15 +208,9 @@ graph TD
 
 Allow user to adjust:
 
-```
-"Here's the draft roadmap. Would you like to:
+Use `AskUserQuestion` to let the user refine the roadmap. Provide options: "Move items between Now/Next/Later", "Add items not captured", "Remove items", "Adjust priorities", and "Approve and save".
 
-- Move items between Now/Next/Later
-- Add items not captured
-- Remove items
-- Adjust priorities
-- Approve and save"
-```
+**STOP. Do not proceed to Phase 5 until the user responds.**
 
 ## Phase 5: Output
 

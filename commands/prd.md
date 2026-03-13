@@ -68,23 +68,13 @@ Wait for all agents to complete, then synthesize their findings.
 
 ## Phase 2: Clarification
 
-Based on discovery, use AskUserQuestion to resolve key ambiguities. Prioritize:
+Based on discovery, use `AskUserQuestion` to resolve key ambiguities. Focus on:
 
-**Strategic Direction**
-- Target users and primary jobs-to-be-done
-- What "success" looks like (metrics, outcomes)
-- Competitive positioning or differentiation
+- **Strategic Direction:** Target users, success metrics, competitive positioning
+- **Scope Decisions:** Must-have vs nice-to-have, features to exclude, timeline
+- **Design Philosophy:** UX principles, key trade-offs
 
-**Scope Decisions**
-- Must-have vs nice-to-have features
-- Features to explicitly exclude
-- Timeline or phase expectations
-
-**Design Philosophy**
-- UX principles guiding the product
-- Key trade-offs (simplicity vs power, etc.)
-
-Ask 2-4 questions at a time. Iterate until you have enough clarity to write the PRD.
+Ask 2-4 questions at a time using `AskUserQuestion`. **STOP and wait for the user's response after each round of questions.** Do not answer the questions yourself or assume defaults. Iterate until you have enough clarity to write the PRD.
 
 ## Phase 3: Synthesis
 

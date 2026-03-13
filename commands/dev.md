@@ -85,17 +85,9 @@ Present this summary in plain language. Use **TodoWrite** to create a task list.
 
 ### Step 3: Clarify Intent
 
-Ask the user what they want to work on using AskUserQuestion:
+Use `AskUserQuestion` to ask the user what they want to work on this session. Present 2-3 options derived from PRD priorities, plus "Continue from where we left off" and "Something else".
 
-```
-"Based on where we are, here are options for this session:
-- [Option A from PRD priorities]
-- [Option B from PRD priorities]
-- [Continue from where we left off]
-- [Something else]
-
-Which direction would you like to go?"
-```
+**STOP. Do not proceed to Step 4 until the user responds.** The user's choice determines what gets built this session.
 
 ### Step 4: Work Loop
 

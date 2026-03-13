@@ -9,21 +9,9 @@ Analyze competitors to inform product positioning and roadmap priorities.
 
 ## Phase 1: Define Scope
 
-Ask user for analysis parameters:
+Use `AskUserQuestion` to ask the user about analysis scope. Provide options for competitors: "Specific competitors (name them)", "Find competitors for me", "Both". Then use `AskUserQuestion` to ask about depth: "Quick overview", "Standard analysis", "Deep dive".
 
-```
-"What would you like to analyze?
-
-Competitors:
-- Specific competitors (name them)
-- Find competitors for me
-- Both
-
-Analysis depth:
-- Quick overview (30 min)
-- Standard analysis (1-2 hours)
-- Deep dive (comprehensive)"
-```
+**STOP. Do not proceed to Phase 2 until the user responds to both questions.**
 
 ## Phase 2: Competitor Discovery
 

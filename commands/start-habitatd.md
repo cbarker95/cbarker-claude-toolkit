@@ -29,7 +29,27 @@ Set `PROJECT_ROOT` to the resolved path. All subsequent commands run from here.
 
 ---
 
-## Step 2: Check dependencies
+## Step 2: Pull latest code
+
+Ensure you're running the latest release before starting:
+
+```bash
+cd $PROJECT_ROOT && git pull --ff-only
+```
+
+If this fails (e.g., uncommitted changes or diverged branches), warn the user but continue — they may be testing local changes intentionally.
+
+Also pull latest for the backend and desktop subfolders in case they have independent lockfile changes:
+```bash
+cd $PROJECT_ROOT/backend && npm install
+cd $PROJECT_ROOT/desktop && npm install
+```
+
+**Note:** The `npm install` here also covers Step 3's dependency check, but Step 3 still runs as a safety net in case the pull was skipped.
+
+---
+
+## Step 3: Check dependencies
 
 Run these checks in parallel:
 
@@ -49,7 +69,7 @@ cd $PROJECT_ROOT/desktop && npm install
 
 ---
 
-## Step 3: Start the backend
+## Step 4: Start the backend
 
 Run the backend in the background:
 
@@ -61,7 +81,7 @@ Use `run_in_background: true`. Note the task ID so you can reference it later.
 
 ---
 
-## Step 4: Wait for backend to be ready
+## Step 5: Wait for backend to be ready
 
 Poll every 2 seconds, up to 30 seconds, until the backend responds:
 
@@ -81,7 +101,7 @@ A `401` response means the backend is running (auth endpoint reachable, just not
 
 ---
 
-## Step 5: Start the Electron app
+## Step 6: Start the Electron app
 
 Run the desktop app in the background:
 
@@ -95,7 +115,7 @@ Use `run_in_background: true`.
 
 ---
 
-## Step 6: Confirm and report
+## Step 7: Confirm and report
 
 Print a status summary:
 

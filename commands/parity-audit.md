@@ -88,17 +88,9 @@ For gaps, analyze impact and priority:
 
 ## Phase 4: Test Generation
 
-Ask user what to generate using AskUserQuestion:
+Use `AskUserQuestion` to ask the user what to generate. Summarize the gap count and provide options: "Generate parity tests for covered actions", "Generate gap report with tool recommendations", "Generate both tests and gap report", and "Focus on specific feature area".
 
-```
-"Found [X] parity gaps across [Y] feature areas.
-
-What would you like to do?
-- Generate parity tests for covered actions
-- Generate gap report with tool recommendations
-- Generate both tests and gap report
-- Focus on specific feature area"
-```
+**STOP. Do not proceed until the user responds.**
 
 ### Generate Tests
 

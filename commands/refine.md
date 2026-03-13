@@ -43,15 +43,9 @@ Consider running /design-language to define your project's visual spec.
 
 **If `$ARGUMENTS` provided:** Use it as the refinement goal.
 
-**If no arguments:** Ask the user what they want to refine:
-```
-AskUserQuestion: "What would you like to refine?"
-Options:
-- Layout/structure — rearrange panels, views, or navigation
-- Visual polish — spacing, colors, typography, shadows
-- Interaction — how elements respond to user actions
-- Component — improve a specific UI component
-```
+**If no arguments:** Use `AskUserQuestion` to ask the user what they want to refine. Provide options: "Layout/structure", "Visual polish", "Interaction", and "Component".
+
+**STOP. Do not proceed until the user responds.**
 
 Then explore the relevant codebase area:
 - Read the components and pages involved
@@ -70,28 +64,9 @@ UX patterns: [any existing decisions that relate]
 
 ## Step 3: Propose approach
 
-Present the refinement plan using `AskUserQuestion`:
+Use `AskUserQuestion` to present the refinement plan. Summarize the proposed changes, files affected, and how it aligns with the design language. Provide options: "Yes, go ahead", "Adjust", and "Cancel".
 
-```
-Here's how I'd approach this:
-
-**Changes:**
-- [What will change — layout, component, interaction]
-
-**Files affected:**
-- [list of files]
-
-**Design language alignment:**
-- [How this follows the design language, or where it needs to deviate]
-
-Proceed with this approach?
-Options:
-- Yes, go ahead
-- Adjust — [tell me what to change]
-- Cancel
-```
-
-If the user adjusts, revise and re-present.
+**STOP. Do not proceed to Step 4 until the user responds.** If the user adjusts, revise and re-present using `AskUserQuestion` again.
 
 ---
 
@@ -125,15 +100,9 @@ Fix any issues before proceeding.
 
 If this refinement establishes a reusable UX pattern, suggest adding it to CLAUDE.md:
 
-```
-AskUserQuestion: "This refinement established a pattern:
-'[description — e.g., Chat/Ask uses a side panel that can overlay any content view]'
+Use `AskUserQuestion` to ask the user whether to add the pattern to CLAUDE.md. Describe the pattern clearly and provide options: "Yes, add it" and "No, this was specific to this change".
 
-Should I add this to CLAUDE.md so future sessions follow it?"
-Options:
-- Yes, add it
-- No, this was specific to this change
-```
+**STOP. Do not proceed until the user responds.**
 
 If yes, append to the "UX Patterns" section in CLAUDE.md (create the section if missing).
 

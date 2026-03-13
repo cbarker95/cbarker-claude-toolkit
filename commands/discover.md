@@ -1,11 +1,13 @@
 ---
-allowed-tools: Read, Write, Edit, Glob, Grep, Task, AskUserQuestion, TodoWrite, WebSearch, WebFetch
+allowed-tools: Read, Write, Edit, Glob, Grep, Task, AskUserQuestion, TodoWrite, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 description: Research and propose new features for the PRD based on market, codebase, and gap analysis
 ---
 
 # Discover Command
 
 Research a product area and propose concrete, buildable features for the PRD. You are a senior PM running a discovery session — opinionated, evidence-driven, and focused on what to build next.
+
+Discovery is about defining WHAT to build. Research happens first, then you enter plan mode to synthesize proposals. The user approves the discovery plan before the PRD is touched.
 
 ## Usage
 
@@ -116,7 +118,13 @@ Wait for all three agents to complete.
 
 ---
 
-## Step 4: Synthesize and propose
+## Step 4: Enter Plan Mode
+
+Call `EnterPlanMode`. All synthesis and proposal work happens in plan mode. The user approves the discovery before the PRD is modified.
+
+---
+
+## Step 5: Synthesize into discovery plan
 
 Read the feature-discovery reference for frameworks:
 - Read [feature-discovery.md](./skills/product-strategy/references/feature-discovery.md)
@@ -129,52 +137,40 @@ Synthesize the three research outputs into feature proposals. For each potential
 4. **Check dependencies:** Does it require other features first?
 5. **Assign priority:** P0 / P1 / P2 using the decision tree
 
-Produce 3-7 proposals. Each proposal needs:
-- Feature name (concise, action-oriented)
-- Priority (P0/P1/P2) with rationale
-- Description (1-2 sentences)
-- Evidence from research
-- Dependencies
-- PRD table row format
+Write the full discovery plan to the plan file:
 
----
+```markdown
+# Discovery: [Research Focus]
 
-## Step 5: Present proposals for approval
+## Research Summary
+[Key findings from each research stream — market, codebase, PRD gaps — condensed to the most relevant points that inform the proposals below]
 
-Present all proposals to the user, then use AskUserQuestion with multi-select:
-
-```
-Based on market research, codebase analysis, and PRD gaps, here are my feature proposals:
+## Proposals
 
 ### 1. [Feature Name] — P[X]
-[What it does. Why it matters. Key evidence.]
+- **Score:** Impact [n] × Frequency [n] × Confidence [n] = [total]
+- **Feasibility:** Easy / Medium / Hard
+- **What:** [1-2 sentence description]
+- **Why:** [Evidence from research — what market signal, codebase gap, or user need supports this]
+- **Dependencies:** [If any, or "None"]
+- **PRD row:** `| [Name] | P[X] | NOT STARTED | [description] |`
 
 ### 2. [Feature Name] — P[X]
-[What it does. Why it matters. Key evidence.]
+[same structure]
 
-### 3. [Feature Name] — P[X]
-[What it does. Why it matters. Key evidence.]
+[... 3-7 proposals total]
 
-[... up to 7]
+## Not Proposed
+[Features considered but dropped below threshold or filtered out — brief note on each explaining why]
 ```
 
-```
-AskUserQuestion (multiSelect: true):
-"Which features should I add to the PRD?"
-Options:
-- [Feature 1 name] (P[X])
-- [Feature 2 name] (P[X])
-- [Feature 3 name] (P[X])
-- [... up to 4 options per question, use multiple questions if needed]
-```
-
-If the user selects none, acknowledge and stop. If they want modifications, adjust and re-present.
+Then call `ExitPlanMode`. If the user requests changes (drop a proposal, adjust priority, modify scope, add something), revise the plan and exit plan mode again.
 
 ---
 
 ## Step 6: Update the PRD
 
-For each approved feature, add a row to the Feature Status table in the PRD:
+After approval, add rows for all proposals in the approved plan to the Feature Status table in the PRD:
 
 ```markdown
 | [Feature Name] | P[X] | NOT STARTED | [Brief description from proposal] |
@@ -210,9 +206,6 @@ Features added to PRD:
 - [Feature 1] (P[X]) — [1-line description]
 - [Feature 2] (P[X]) — [1-line description]
 
-Features not selected:
-- [Feature 3] — [brief reason if user gave one]
-
 PRD updated: [count] new features added to Feature Status table.
 
 Next steps:
@@ -231,6 +224,6 @@ Next steps:
 
 **Research returns thin results:** Be honest about evidence quality. Lower confidence scores accordingly. Propose fewer features rather than padding with weak ones.
 
-**Proposals conflict with existing features:** Flag the conflict explicitly. Explain whether the proposal replaces, extends, or competes with the existing feature. Let the user decide.
+**Proposals conflict with existing features:** Flag the conflict explicitly in the plan. Explain whether the proposal replaces, extends, or competes with the existing feature. Let the user decide during plan review.
 
-**Feature requires prerequisite work:** Note the dependency. If the prerequisite doesn't exist in the PRD, propose it as a separate feature (likely P0 or P1).
+**Feature requires prerequisite work:** Note the dependency in the plan. If the prerequisite doesn't exist in the PRD, propose it as a separate feature (likely P0 or P1).

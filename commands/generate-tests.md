@@ -9,27 +9,13 @@ Generate tests that verify agent capabilities, action parity, and behavior.
 
 ## Phase 1: Test Scope Discovery
 
-Ask user what tests to generate using AskUserQuestion:
+Use `AskUserQuestion` to ask the user what type of tests to generate. Provide options: "Parity tests", "Capability tests", "Behavior tests", and "All of the above".
 
-```
-"What type of agent tests would you like to generate?
+**STOP. Do not proceed until the user responds.**
 
-- Parity tests: Verify agents can do what users can in UI
-- Capability tests: Verify agents can achieve business outcomes
-- Behavior tests: Verify agents follow guidelines (confirmations, errors)
-- All of the above"
-```
+Then use `AskUserQuestion` to ask about scope. Provide options: "Full codebase scan", "Specific feature area", "Based on recent changes (git diff)", and "From PRD/user stories".
 
-Then ask for scope:
-
-```
-"What scope should I cover?
-
-- Full codebase scan
-- Specific feature area (specify)
-- Based on recent changes (git diff)
-- From PRD/user stories"
-```
+**STOP. Do not proceed to Phase 2 until the user responds to both questions.**
 
 ## Phase 2: Context Gathering
 

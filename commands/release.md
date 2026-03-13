@@ -75,25 +75,9 @@ Proposed: v[A.B.C]
 [Why this version bump]
 ```
 
-Ask user to confirm using AskUserQuestion:
+Use `AskUserQuestion` to confirm the version with the user. Present the recommended version bump with rationale, key changes, and provide options: the recommended version, an alternative, "Custom version", and "Cancel".
 
-```
-"Based on the changes, I recommend a [TYPE] release:
-
-Current: v[X.Y.Z]
-Proposed: v[A.B.C]
-
-Key changes:
-- [Change 1]
-- [Change 2]
-- [Breaking change if any]
-
-Which version would you like to release?
-- [Recommended version]
-- [Alternative]
-- Custom version
-- Cancel"
-```
+**STOP. Do not proceed to Phase 3 until the user responds.**
 
 ## Phase 3: Generate Changelog
 
@@ -154,17 +138,9 @@ gh release create v[version] \
 
 ## Phase 6: Post-Release
 
-Ask about additional actions:
+Use `AskUserQuestion` to ask about post-release actions. Provide options: "Deploy to production", "Send announcement", "Update documentation", and "Nothing, we're done".
 
-```
-"Release v[version] is complete!
-
-What else would you like to do?
-- Deploy to production
-- Send announcement
-- Update documentation
-- Nothing, we're done"
-```
+**STOP. Do not proceed until the user responds.**
 
 ## Output
 
