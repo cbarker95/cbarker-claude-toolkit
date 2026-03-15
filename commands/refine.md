@@ -1,96 +1,182 @@
 ---
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion, TodoWrite
-description: Iterate on UX/UI — refine layouts, interactions, and visual design without a PRD entry
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion
+description: UX/UI iteration — small tweaks, iterative visual work, or large-scope feedback with plan generation
 ---
 
 # Refine Command
 
-Structured UX/UI iteration. Lighter than `/ship` — no PRD entry needed. Loads the project's design language, uses the `frontend-design` skill for visual execution, and suggests stable patterns for CLAUDE.md.
+UX/UI iteration at any scale. Works in three modes:
+
+- **Small**: Direct implementation of focused changes (single component, one issue)
+- **Iterative**: Multiple visual passes using the design-iterator agent
+- **Large-scope**: Generates a refinement plan with 🟪 markers that go-commando can execute autonomously
+
+Use this for:
+- Visual polish (spacing, typography, colour adjustments)
+- Interaction improvements (hover states, transitions, micro-interactions)
+- Accessibility fixes
+- Responsive layout tweaks
+- Design system alignment
+- Broad feedback from user testing or stakeholder review (large-scope mode)
 
 ## Usage
 
 ```
-/refine chat should be a side panel alongside transcripts
-/refine make the customer table feel more spacious
-/refine the ask panel needs better empty state
-/refine                  # ask what to refine
+/refine [what to work on]
+/refine                    — asks what to refine
 ```
 
 ---
 
-## Step 1: Load design context
+## Step 1: Understand the Refinement
 
-Before doing anything else, load all available design constraints:
+If `$ARGUMENTS` is empty, **STOP HERE.** Ask the user:
 
-1. **Design language** — check for `docs/design/DESIGN_LANGUAGE.md`, then `docs/DESIGN_LANGUAGE.md`, then `DESIGN_LANGUAGE.md`. If found, read it. This defines colors, typography, spacing, shadows, component patterns, grid system, and anti-patterns. These are hard constraints — follow them.
+```
+What would you like to refine?
 
-2. **CLAUDE.md** — read the project's CLAUDE.md. Look for:
-   - "Design Language" section (visual constraints summary)
-   - "UX Patterns" section (stable layout/interaction decisions from previous refinements)
-   - These represent decisions already made — don't contradict them unless the user explicitly asks.
+  - Visual polish on a specific component or page
+  - Fix a specific UX issue (describe it)
+  - Align something to the design system
+  - Accessibility improvement
+  - Something else (describe)
+```
 
-3. **Frontend design skill** — the `frontend-design` skill is available for creative visual execution. When implementing visual changes, apply its principles for typography, color, motion, spatial composition, and attention to detail. The design language provides the *what* (specific values), the frontend-design skill provides the *how* (execution quality).
+**Do not proceed until the user has replied.**
+
+If `$ARGUMENTS` is provided, confirm the scope. **STOP HERE** and present:
+
+```
+Refining: [what was described]
+
+Is this:
+  - A small, focused change (I'll implement it directly)
+  - Iterative visual work needing multiple passes (I'll use the design-iterator agent)
+  - Large-scope feedback (I'll generate a refinement plan for go-commando)
+```
+
+**Do not proceed until the user has confirmed or clarified.**
+
+---
+
+## Step 2: Load Design Context
+
+Look for the design language file in this order:
+1. `docs/design/DESIGN_LANGUAGE.md`
+2. `docs/DESIGN_LANGUAGE.md`
+3. `DESIGN_LANGUAGE.md` (repo root)
+
+If found, read it for visual principles, colour philosophy, and interaction guidelines.
+
+Also read CLAUDE.md for:
+- "Design Language" section (visual constraints summary)
+- "UX Patterns" section (stable decisions from previous refinements)
 
 If no design language exists, note it:
 ```
-No design language found. Visual changes will follow the frontend-design skill principles.
+No design language found. Visual changes will follow general best practices.
 Consider running /design-language to define your project's visual spec.
 ```
 
 ---
 
-## Step 2: Understand the target
+## Step 3: Explore Relevant Code
 
-**If `$ARGUMENTS` provided:** Use it as the refinement goal.
-
-**If no arguments:** Use `AskUserQuestion` to ask the user what they want to refine. Provide options: "Layout/structure", "Visual polish", "Interaction", and "Component".
-
-**STOP. Do not proceed until the user responds.**
-
-Then explore the relevant codebase area:
-- Read the components and pages involved
-- Understand current layout, data flow, and interaction patterns
-- Identify what specifically needs to change
-- Note any design language constraints and UX patterns that apply
-
-Tell the user what you found:
-```
-Current state: [brief description of what exists]
-Design language: [relevant constraints that apply, or "none found"]
-UX patterns: [any existing decisions that relate]
-```
+Before making changes, read the files being refined. Understand:
+- Current implementation patterns
+- Which design tokens and components are in use
+- How this connects to surrounding components
+- Any existing tests that cover this area
 
 ---
 
-## Step 3: Propose approach
+## Step 4: Implement the Refinement
 
-Use `AskUserQuestion` to present the refinement plan. Summarize the proposed changes, files affected, and how it aligns with the design language. Provide options: "Yes, go ahead", "Adjust", and "Cancel".
+For **small, focused changes** (single component, one issue):
 
-**STOP. Do not proceed to Step 4 until the user responds.** If the user adjusts, revise and re-present using `AskUserQuestion` again.
+Implement directly. Follow the project's established patterns, design language constraints, and conventions from CLAUDE.md.
 
----
+For **iterative visual work** (multiple passes needed):
 
-## Step 4: Implement
+Delegate to the `design-iterator` agent if available:
 
-Make the changes. Use `TodoWrite` to track multi-step refinements.
+```
+Use Task tool:
+  subagent_type: cbarker-claude-toolkit:design-iterator
+  prompt: "Iterate [N] times on [specific component/page]:
+    Current issue: [what looks wrong]
+    Goal: [what it should look like]
+    Files: [list relevant files]"
+```
 
-- Follow design language constraints (grid, colors, spacing, shadows, anti-patterns)
-- Apply `frontend-design` skill quality for visual execution
-- For **complex visual refinement**, delegate to the `design-iterator` agent:
-  ```
-  Task (subagent_type: cbarker-claude-toolkit:design-iterator):
-  "Iterate [N] times on [component/area]. Design language is at docs/design/DESIGN_LANGUAGE.md.
-  Focus on: [specific aspect to improve]"
-  ```
+If the design-iterator agent isn't available, iterate manually — make changes, verify, adjust, repeat.
+
+For **large-scope feedback** (broad changes across multiple components/pages):
+
+This mode generates a refinement spec that go-commando can execute autonomously.
+
+1. **Gather all feedback** — Ask the user to describe every change needed. Capture:
+   - Which pages/components need changes
+   - What's wrong with each (specific issues, not vague "make it better")
+   - Any reference designs, screenshots, or competitor examples
+
+2. **Analyze current code** — Read the affected files to understand what exists and how changes would be structured.
+
+3. **Generate a refinement spec** — Write to `Docs/Specifications/Plans/{feature}-refinement.md` using the standard spec format with 🟪 markers:
+
+   ```markdown
+   # {Feature} — Refinement Specification
+
+   > Refinement pass based on [user testing / stakeholder feedback / design review].
+   > Run: `node scripts/go-commando.js implement Plans/{feature}-refinement`
+
+   ## Overview
+   {Summary of the feedback and what needs to change}
+
+   ## Features
+
+   🟪 ### 1. {Component/Page}: {Specific change}
+   {What to change, why, and how}
+   **Files:** [list]
+
+   🟪 ### 2. {Component/Page}: {Another change}
+   ...
+   ```
+
+   Each 🟪 item should be self-contained — completable in a single go-commando iteration.
+
+4. **Present the plan** for approval. **STOP HERE** and wait for the user:
+
+   ```text
+   Refinement plan ready: Docs/Specifications/Plans/{feature}-refinement.md
+
+     Changes planned: [N] items
+     Files affected: [list]
+
+     To execute automatically:
+       node scripts/go-commando.js implement Plans/{feature}-refinement
+
+     Or work through them manually — each item is a self-contained change.
+
+     Review and approve?
+
+   Options:
+     - Approve (I'll write the file)
+     - Adjust (describe changes)
+     - Cancel
+   ```
+
+   **Do not write the file until the user approves.**
+
+5. After approval, write the refinement spec and stop. The user will run go-commando separately.
 
 ---
 
 ## Step 5: Verify
 
-- If a build command exists, run it
-- If TypeScript, run type checking
-- If `agent-browser` is available, take a screenshot to verify visual changes
-- Check for broken imports, missing styles, layout issues
+Run the project's build and test commands to verify nothing is broken.
+
+If the change is purely visual (no logic), a build check is sufficient.
 
 Fix any issues before proceeding.
 
@@ -100,11 +186,12 @@ Fix any issues before proceeding.
 
 If this refinement establishes a reusable UX pattern, suggest adding it to CLAUDE.md:
 
-Use `AskUserQuestion` to ask the user whether to add the pattern to CLAUDE.md. Describe the pattern clearly and provide options: "Yes, add it" and "No, this was specific to this change".
+```
+This refinement established a pattern:
+'[description]'
 
-**STOP. Do not proceed until the user responds.**
-
-If yes, append to the "UX Patterns" section in CLAUDE.md (create the section if missing).
+Should I add this to CLAUDE.md so future sessions follow it?
+```
 
 Skip this step if the refinement didn't establish a generalizable pattern.
 
@@ -127,12 +214,8 @@ CLAUDE.md: [pattern added / no new pattern]
 
 ---
 
-## Edge Cases
+## Notes
 
-**No design language found:** Use `frontend-design` skill principles as the visual guide. Suggest `/design-language` at the end.
-
-**Refinement contradicts existing UX pattern:** Flag it. Ask whether to update the pattern or adjust the refinement.
-
-**Refinement scope creeps:** Pause and re-confirm scope. Suggest breaking into multiple `/refine` runs.
-
-**Visual refinement needs many iterations:** Delegate to `design-iterator` agent rather than manually iterating.
+- **Small and iterative modes** are for focused work within a single session
+- If feedback is broad (touching many components, multiple pages, or requiring structural changes), use **large-scope mode** to generate a plan that go-commando can execute
+- If you discover new features are needed (not just refinements to existing ones), stop and use `/discover` to create a discovery spec for the new work

@@ -1,229 +1,280 @@
 ---
-allowed-tools: Read, Write, Edit, Glob, Grep, Task, AskUserQuestion, TodoWrite, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
-description: Research and propose new features for the PRD based on market, codebase, and gap analysis
+allowed-tools: Read, Write, Edit, Glob, Grep, Task, AskUserQuestion, EnterPlanMode, ExitPlanMode
+description: Research codebase and generate a discovery specification for go-commando to build
 ---
 
 # Discover Command
 
-Research a product area and propose concrete, buildable features for the PRD. You are a senior PM running a discovery session — opinionated, evidence-driven, and focused on what to build next.
-
-Discovery is about defining WHAT to build. Research happens first, then you enter plan mode to synthesize proposals. The user approves the discovery plan before the PRD is touched.
+Research the codebase, clarify requirements, and generate a discovery specification — a structured document with 🟪 markers that go-commando + `/implement` can build autonomously. This is the thinking step before building — it answers "what should we build and how should it be structured?" so that go-commando can build it.
 
 ## Usage
 
 ```
-/discover [topic or problem area]
-/discover                          # auto-detect gaps from PRD
+/discover [feature area or brief description]
+/discover                    — asks what to discover
 ```
 
 ---
 
-## Step 1: Find the PRD
+## Step 1: Understand the Discovery
 
-Locate the PRD. Check these paths in order:
-- `docs/product/PRD.md`
-- `docs/PRD.md`
-- `PRD.md`
-- Any `*.md` file containing a `## Feature Status` table
+If `$ARGUMENTS` is empty, **STOP HERE.** Ask the user:
 
-If no PRD is found, tell the user and suggest running `/prd` first. Stop.
+```
+What feature area should I research and spec out?
 
-Read the PRD. Parse the **Feature Status** table to understand:
-- What features exist and their status (COMPLETE, IN PROGRESS, NOT STARTED, etc.)
-- The product vision and problem statement
-- Target users and success metrics
-- Technical constraints
+  - A new page or module (describe the user problem it solves)
+  - An extension to an existing feature (which feature, what's missing)
+  - A broad product area (describe)
+  - Something else (describe)
+```
+
+**Do not proceed until the user has replied.**
+
+If `$ARGUMENTS` is provided, confirm the scope. **STOP HERE** and present:
+
+```
+Discovering: [what was described]
+
+I'll research the codebase and generate a discovery specification that go-commando can build.
+The spec will include components, pages, data layers, and implementation details.
+
+Proceed with research?
+```
+
+**Do not proceed until the user has confirmed.**
 
 ---
 
-## Step 2: Determine research focus
+## Step 2: Enter Plan Mode
 
-**If `$ARGUMENTS` is provided:** Use it as the research focus. Examples:
-- `/discover user onboarding` — research onboarding features
-- `/discover "users drop off during signup"` — research solutions to a specific problem
-- `/discover mobile experience` — research mobile-specific features
+**Immediately call `EnterPlanMode`.** The entire discovery process — research, analysis, and spec drafting — happens inside plan mode. The discovery spec IS the plan. The user will review the complete spec before anything is saved to disk.
 
-**If no arguments:** Analyze the PRD for gaps:
-- Areas mentioned in the vision but missing from Feature Status
-- User flows that lack supporting features
-- Competitor-standard capabilities that are absent
-- Logical next steps after COMPLETE features
-
-Tell the user what you're focusing on before starting research.
+**This is mandatory. Do not skip this step.**
 
 ---
 
-## Step 3: Parallel research
+## Step 3: Check for Existing Specs and Template
 
-Launch three sub-agents **in parallel** using the Task tool:
+Before researching, check what already exists:
 
-**Agent 1: Market & Competitive Research**
-```
-subagent_type: general-purpose
-prompt: "Research the market landscape for [focus area]:
-1. Use WebSearch to find current trends, competitor features, and market expectations
-2. Identify what leading products in this space offer
-3. Note emerging trends or shifts in user expectations
-4. Find any relevant industry benchmarks or standards
+1. Look for an existing spec at `Docs/Specifications/{Feature}/README.md`
+2. Read the discovery spec template from `templates/discovery-spec-template.md` for the expected format. If not found, check `Docs/Specifications/_templates/discovery-spec-template.md` as a fallback.
 
-Focus: [topic from Step 2]
-Product context: [product name and vision from PRD]
+If an existing spec is found, ask whether to update it or start fresh.
 
-Return structured findings:
-- Market trends (3-5 key trends)
-- Competitor features (what others offer that we don't)
-- User expectations (what users in this space expect as baseline)
-- Emerging opportunities (where the market is heading)"
-```
+---
 
-**Agent 2: Codebase & Technical Analysis**
+## Step 4: Parallel Discovery
+
+Launch these sub-agents **in parallel** using the Task tool:
+
+### Agent 1: Existing Documentation & Architecture
+
 ```
 subagent_type: Explore
-prompt: "Analyze the current codebase to understand technical capabilities and constraints:
-1. What's currently built? (features, routes, APIs, components)
-2. What architecture patterns are established?
-3. What would be easy to add based on existing patterns?
-4. What would require significant new infrastructure?
-5. Are there any partially built features or stubs?
+prompt: "Review the project architecture relevant to [feature area]:
 
-Focus area: [topic from Step 2]
+1. Read CLAUDE.md for conventions, architecture, and build commands
+2. Check for existing product context:
+   - docs/product/PRD.md (if it exists — extract product area, personas, priorities)
+   - Any existing specs in Docs/Specifications/ related to this area
+3. Read README.md for product description and setup
+4. Identify architectural patterns, conventions, and constraints
 
-Return structured findings:
-- Current capabilities (what exists)
-- Architecture patterns (what's easy to extend)
-- Technical enablers (what the codebase makes cheap)
-- Technical constraints (what would be hard or require new infra)
-- Partial implementations (started but not finished)"
+Return:
+- Product context (if found)
+- Target users for this feature
+- Any existing specs or documentation
+- Key architectural constraints or patterns to follow"
 ```
 
-**Agent 3: PRD Gap Analysis**
+### Agent 2: Codebase Feature Analysis
+
 ```
 subagent_type: Explore
-prompt: "Analyze the PRD at [path] for gaps and opportunities:
-1. Read the full PRD including Feature Status table
-2. Compare the product vision against current features — what's missing?
-3. Look at user flows — are there gaps in the journey?
-4. Check dependencies — are there features that would unlock others?
-5. Look at COMPLETE features — what logical next steps do they enable?
+prompt: "Analyze what's currently built in this repository relevant to [feature area]:
 
-Return structured findings:
-- Vision-feature gaps (vision promises things not in Feature Status)
-- User flow gaps (journeys that dead-end or lack support)
-- Dependency opportunities (features that would unblock others)
-- Natural extensions (logical next steps from what's built)
-- Underserved areas (parts of the product with few features)"
+1. What pages/routes/endpoints exist?
+2. What components/modules exist?
+3. What patterns are established (state management, data flow, styling)?
+4. What would be easy to extend vs. what requires new infrastructure?
+5. Are there partially built features or stubs?
+
+Create a feature inventory:
+- BUILT: Fully functional
+- PARTIAL: Started but incomplete
+- MISSING: Referenced but not implemented
+
+Return a feature map with classification, file locations, and reusable patterns."
 ```
 
-Wait for all three agents to complete.
+### Agent 3: Design & UX Analysis
+
+```
+subagent_type: Explore
+prompt: "Analyze the UI/UX patterns relevant to [feature area]:
+
+1. Read docs/design/DESIGN_LANGUAGE.md if it exists
+2. Examine existing components for visual patterns, layout conventions
+3. Identify reusable components and design tokens
+4. Look at user flows — how does navigation work?
+
+Return:
+- Design language constraints (if found)
+- Reusable UI components
+- Layout and navigation patterns
+- Data display patterns (tables, cards, lists)"
+```
 
 ---
 
-## Step 4: Enter Plan Mode
+## Step 5: Synthesize and Present Discovery Summary
 
-Call `EnterPlanMode`. All synthesis and proposal work happens in plan mode. The user approves the discovery before the PRD is modified.
+After agents complete, synthesize findings into a summary. **STOP HERE** and present to the user:
+
+```text
+Discovery summary: [Feature Name]
+
+  Existing code:
+    - [BUILT items relevant to this feature]
+    - [PARTIAL items that can be extended]
+    - [MISSING items that need building]
+
+  Proposed discovery spec:
+    Components: [N] ([names])
+    Pages/Views: [N] ([names])
+    Data hooks/services: [N]
+
+  Estimated 🟪 features: [N] items for go-commando to build
+
+  Should I generate the full discovery specification?
+
+Options:
+  - Generate spec (I'll write it for your review before saving)
+  - Adjust scope (describe changes)
+  - Cancel
+```
+
+**Do not proceed until the user has confirmed.** Wait silently.
 
 ---
 
-## Step 5: Synthesize into discovery plan
+## Step 6: Draft the Spec to the Plan File
 
-Read the feature-discovery reference for frameworks:
-- Read [feature-discovery.md](./skills/product-strategy/references/feature-discovery.md)
+Write the full discovery spec to the plan file. Since you are already in plan mode (from Step 2), the user will see this spec for review when you call `ExitPlanMode`.
 
-Synthesize the three research outputs into feature proposals. For each potential feature:
+The spec will eventually go to `Docs/Specifications/{Feature}/README.md`, but only after the user approves the plan.
 
-1. **Score it:** Impact (1-5) x Frequency (1-5) x Confidence (1-5)
-2. **Filter:** Drop anything below 27 (3x3x3)
-3. **Assess feasibility:** Easy / Medium / Hard based on codebase analysis
-4. **Check dependencies:** Does it require other features first?
-5. **Assign priority:** P0 / P1 / P2 using the decision tree
-
-Write the full discovery plan to the plan file:
+### Spec Structure
 
 ```markdown
-# Discovery: [Research Focus]
+# {Feature Name} — Discovery Specification
 
-## Research Summary
-[Key findings from each research stream — market, codebase, PRD gaps — condensed to the most relevant points that inform the proposals below]
+> **Run**: `node scripts/go-commando.js implement {SpecFolderName}`
+>
+> This spec is designed for autonomous execution via go-commando.js + /implement.
+> Each 🟪 section is a self-contained unit of work. /implement will pick the next
+> unfinished 🟪, build it, mark it ✅, and commit. The loop continues until all
+> features are complete.
 
-## Proposals
+## Overview
 
-### 1. [Feature Name] — P[X]
-- **Score:** Impact [n] × Frequency [n] × Confidence [n] = [total]
-- **Feasibility:** Easy / Medium / Hard
-- **What:** [1-2 sentence description]
-- **Why:** [Evidence from research — what market signal, codebase gap, or user need supports this]
-- **Dependencies:** [If any, or "None"]
-- **PRD row:** `| [Name] | P[X] | NOT STARTED | [description] |`
+{What this feature does and why — 2-3 sentences focused on user problem}
 
-### 2. [Feature Name] — P[X]
-[same structure]
+## Task Flows
 
-[... 3-7 proposals total]
+### Flow 1: {Primary user journey}
+**User**: {who}
+**Entry point**: {where}
+1. User {action} → System {response}
+2. ...
+**Success**: {outcome}
+**Edge cases**: {empty states, errors}
 
-## Not Proposed
-[Features considered but dropped below threshold or filtered out — brief note on each explaining why]
-```
+## Architecture
 
-Then call `ExitPlanMode`. If the user requests changes (drop a proposal, adjust priority, modify scope, add something), revise the plan and exit plan mode again.
+{ASCII tree diagram showing component composition, data flow, navigation}
 
----
+## Scope
 
-## Step 6: Update the PRD
-
-After approval, add rows for all proposals in the approved plan to the Feature Status table in the PRD:
-
-```markdown
-| [Feature Name] | P[X] | NOT STARTED | [Brief description from proposal] |
-```
-
-Add new rows at the appropriate position — group by priority (P0s first, then P1s, then P2s).
-
-If the Feature Status table doesn't exist in the PRD, create the section:
-
-```markdown
-## Feature Status
-
-<!-- Status: NOT STARTED | IN PROGRESS | COMPLETE | BLOCKED | DEFERRED -->
-<!-- Priority: P0 (MVP) | P1 (post-MVP) | P2 (future) | -- (deferred) -->
-<!-- /ship reads this table to pick the next feature and updates it with progress -->
-
-| Feature | Priority | Status | Notes |
-|---------|----------|--------|-------|
-[existing rows if any]
-[new approved features]
-```
+- **Components**: {list}
+- **Pages/Views**: {list}
+- **Data/Services**: {list}
+- **Out of scope**: {list}
 
 ---
 
-## Step 7: Report
+## Features
 
+🟪 ### 1. Foundation: {scaffolding, routes, types}
+{description}
+**Files:**
+- [file paths with (new) or (modify)]
+
+🟪 ### 2. Component: {Name}
+{description}
+**Files:**
+- [file paths]
+
+🟪 ### 3. Data layer: {hooks, services, types}
+{description}
+**Files:**
+- [file paths]
+
+🟪 ### 4. Page: {PageName}
+{description — how components wire together}
+**Files:**
+- [file paths]
 ```
-Discovery complete.
 
-Research focus: [topic]
+### Rules for Spec Generation
 
-Features added to PRD:
-- [Feature 1] (P[X]) — [1-line description]
-- [Feature 2] (P[X]) — [1-line description]
+- **Every 🟪 feature must be self-contained** — completable in a single go-commando iteration
+- **Foundation always comes first** — scaffolding, routes, types
+- **Components before pages** — build parts, then assemble
+- **Data layer before pages** — pages wire components to data
+- **File paths must follow project conventions** (read from CLAUDE.md)
+- **Each feature lists its files** with (new) or (modify) annotations
+- **Include tests** for each component and page where the project has a test framework
+- **Keep features small** — if a 🟪 item would take more than ~10 minutes, split it
 
-PRD updated: [count] new features added to Feature Status table.
+---
 
-Next steps:
-- Run `/ship` to start building the highest-priority new feature
-- Run `/discover [different topic]` to explore another area
-- Run `/competitive` for deeper competitive analysis
+## Step 7: Exit Plan Mode for Approval
+
+Once the spec is complete in the plan file, call `ExitPlanMode`. The user will see the full spec and can:
+- **Approve** — proceed to save
+- **Request changes** — iterate on the spec in plan mode
+- **Reject** — stop without saving
+
+**Do not write the spec to `Docs/Specifications/` until the user approves the plan.**
+
+---
+
+## Step 8: Save and Report
+
+After the user approves the plan, write the spec to `Docs/Specifications/{Feature}/README.md`. Create the directory if needed. Then output:
+
+```text
+Discovery spec saved: Docs/Specifications/{Feature}/README.md
+
+  Features: [N] items ready for go-commando
+  Estimated build: [rough estimate based on feature count]
+
+  To build autonomously:
+    node scripts/go-commando.js implement {Feature}
+
+  To refine after building:
+    /refine [specific issue]
 ```
 
 ---
 
-## Edge Cases
+## Notes
 
-**No PRD found:** Tell the user. Suggest `/prd`. Stop.
-
-**No arguments and PRD has no gaps:** Tell the user the PRD looks comprehensive. Ask if there's a specific area they want to explore or if they want to look beyond current scope.
-
-**Research returns thin results:** Be honest about evidence quality. Lower confidence scores accordingly. Propose fewer features rather than padding with weak ones.
-
-**Proposals conflict with existing features:** Flag the conflict explicitly in the plan. Explain whether the proposal replaces, extends, or competes with the existing feature. Let the user decide during plan review.
-
-**Feature requires prerequisite work:** Note the dependency in the plan. If the prerequisite doesn't exist in the PRD, propose it as a separate feature (likely P0 or P1).
+- The discovery spec is the input to go-commando + `/implement` — it defines what gets built
+- Each 🟪 item should be completable in one `/implement` session (typically 1 component, 1 hook group, or 1 page)
+- Keep the spec focused on what to build — detailed enough for autonomous execution, not a novel
+- Run `/discover` again to add features to an existing spec or create a new one
+- After go-commando builds the spec, use `/refine` for polish
