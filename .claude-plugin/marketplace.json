@@ -4,15 +4,15 @@
     "name": "cbarker95"
   },
   "metadata": {
-    "description": "Personal collection of Claude Code skills, agents, and commands",
-    "version": "1.0.0"
+    "description": "Personal collection of Claude Code skills, agents, and commands for product discovery, spec architecture, UX/UI design, design systems, frontend development, and agent-native architecture",
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "cbarker-claude-toolkit",
       "source": "./",
-      "description": "Skills, agents, and commands for design systems, frontend development, and agent-native architecture",
-      "version": "1.0.0"
+      "description": "Skills, agents, and commands for product discovery, spec architecture, UX/UI design, design systems, frontend development, and agent-native architecture",
+      "version": "1.1.0"
     }
   ]
 }
